@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "almanik-pms",
   "builds": [
     {
       "src": "server/server-simple.js",
@@ -20,4 +19,4 @@
   "env": {
     "NODE_ENV": "production"
   }
-}# Force deployment with DATABASE_URL - Thu Nov 20 03:23:29 PM HST 2025
+}
