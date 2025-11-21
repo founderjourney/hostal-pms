@@ -7,7 +7,10 @@
     "start": "node server/server-simple.js",
     "dev": "node server/server-simple.js",
     "build": "echo 'Build completed'",
-    "vercel-build": "echo 'Build completed for Vercel'"
+    "vercel-build": "echo 'Build completed for Vercel'",
+    "test": "jest --verbose --coverage",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --ci --coverage --maxWorkers=2"
   },
   "dependencies": {
     "@sentry/node": "^10.26.0",
@@ -17,6 +20,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^8.2.1",
+    "express-session": "^1.18.2",
     "express-validator": "^7.3.1",
     "helmet": "^8.1.0",
     "ical-generator": "^10.0.0",
@@ -44,5 +48,11 @@
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4"
   }
 }

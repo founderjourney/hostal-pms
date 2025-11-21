@@ -4,3 +4,4 @@
 # Local development files
 server.log
 server/almanik.db
+coverage/
