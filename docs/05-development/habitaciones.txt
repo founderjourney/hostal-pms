@@ -1,0 +1,26 @@
+Habitacion 1:
+
+camas: 1-1, 1-2, 1-3, 1-4, 1-5, 1-6, 1-7, 1-8, 1-9.
+
+
+Habitacion 2:
+
+camas: 1-1, 1-2, 1-3, 1-4, 1-5, 1-6.
+
+
+Habitacion 3:
+
+camas: 1-1, 1-2, 1-3, 1-4.
+
+
+Habitacion 4:
+
+camas: 1-1, 1-2, 1-3, 1-4, 1-5.
+
+Priv 1:
+
+2 habias
+
+Priv 2:
+
+1 cama

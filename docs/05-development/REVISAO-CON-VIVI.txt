@@ -1,0 +1,16 @@
+Regisro de usuario not working
+
+Enviar datos del huspede para imigracion (buscar si es posible enviar automatico para la API de la migracion
+
+
+Integracion con OTAs Wostelworld y Booking (API) - Evitar over booking 
+
+
+Deixar funcional la cosa del registro sincronizando con banco de datos habitacion 1
+
+
+almanikviajero.com
+casaalmanik.com
+
+almanik.com/viajero
+almanik.com/casa

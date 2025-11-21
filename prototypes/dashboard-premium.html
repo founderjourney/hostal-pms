@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Almanik PMS - Premium Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: rgba(44, 62, 80, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 20px;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(52, 152, 219, 0.1), rgba(155, 89, 182, 0.1));
+            pointer-events: none;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo i {
+            font-size: 32px;
+            color: #3498db;
+            margin-right: 12px;
+        }
+
+        .logo h2 {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #3498db, #9b59b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 15px 20px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 15px;
+            text-align: left;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .nav-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-button:hover::before {
+            left: 100%;
+        }
+
+        .nav-button.active {
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-button:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+
+        .nav-button i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .logout {
+            margin-top: auto;
+            background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .dashboard-title {
+            color: white;
+        }
+
+        .dashboard-title h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .dashboard-title p {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        .time-info {
+            text-align: right;
+            color: white;
+        }
+
+        .current-time {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .current-date {
+            opacity: 0.8;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            padding: 15px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .stat-icon.occupied {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.2);
+        }
+
+        .stat-icon.clean {
+            color: #2ecc71;
+            background: rgba(46, 204, 113, 0.2);
+        }
+
+        .stat-icon.dirty {
+            color: #f39c12;
+            background: rgba(243, 156, 18, 0.2);
+        }
+
+        .stat-icon.revenue {
+            color: #3498db;
+            background: rgba(52, 152, 219, 0.2);
+        }
+
+        .stat-number {
+            font-size: 42px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: rgba(255,255,255,0.8);
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .stat-change.positive {
+            color: #2ecc71;
+        }
+
+        .stat-change.negative {
+            color: #e74c3c;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .activity-feed {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            animation: slideInRight 0.5s ease;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 16px;
+            color: white;
+        }
+
+        .activity-icon.checkin {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+
+        .activity-icon.checkout {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .activity-icon.sale {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .activity-icon.payment {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .activity-desc {
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+        }
+
+        .activity-time {
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+        }
+
+        .beds-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .room-section {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .room-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .room-title i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .bed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .bed-status {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .bed-status:hover {
+            transform: scale(1.05);
+        }
+
+        .bed-status.occupied {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 8px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .bed-status.clean {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .bed-status.dirty {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            box-shadow: 0 8px 20px rgba(243, 156, 18, 0.3);
+        }
+
+        .bed-number {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .bed-guest {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #3498db);
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        .financial-overview {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 30px;
+        }
+
+        .financial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .financial-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+        }
+
+        .financial-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .financial-label {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .app {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="logo">
+                <i class="fas fa-hotel"></i>
+                <h2>ALMANIK PMS</h2>
+            </div>
+
+            <button class="nav-button active" onclick="showView('dashboard')">
+                <i class="fas fa-chart-pie"></i>Dashboard
+            </button>
+
+            <button class="nav-button" onclick="showView('beds')">
+                <i class="fas fa-bed"></i>Beds
+            </button>
+
+            <button class="nav-button" onclick="showView('guests')">
+                <i class="fas fa-users"></i>Guests
+            </button>
+
+            <button class="nav-button" onclick="showView('pos')">
+                <i class="fas fa-cash-register"></i>POS
+            </button>
+
+            <button class="nav-button" onclick="showView('staff')">
+                <i class="fas fa-user-tie"></i>Staff
+            </button>
+
+            <button class="nav-button" onclick="showView('cash')">
+                <i class="fas fa-coins"></i>Cash
+            </button>
+
+            <button class="nav-button logout">
+                <i class="fas fa-sign-out-alt"></i>Logout
+            </button>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- DASHBOARD VIEW -->
+            <div id="dashboard-view" class="fade-in-up">
+                <!-- HEADER -->
+                <div class="dashboard-header">
+                    <div class="dashboard-title">
+                        <h1>Welcome back, Maria!</h1>
+                        <p>Here's what's happening at your hostel today</p>
+                    </div>
+                    <div class="time-info">
+                        <div class="current-time" id="current-time">10:42 AM</div>
+                        <div class="current-date" id="current-date">Tuesday, Oct 1, 2024</div>
+                    </div>
+                </div>
+
+                <!-- STATS GRID -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-number">12</div>
+                                <div class="stat-label">Occupied Beds</div>
+                                <div class="stat-change positive">
+                                    <i class="fas fa-arrow-up"></i> +2 from yesterday
+                                </div>
+                            </div>
+                            <div class="stat-icon occupied">
+                                <i class="fas fa-bed"></i>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-number">8</div>
+                                <div class="stat-label">Clean Beds</div>
+                                <div class="stat-change positive">
+                                    <i class="fas fa-arrow-up"></i> Ready for guests
+                                </div>
+                            </div>
+                            <div class="stat-icon clean">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 40%"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-number">3</div>
+                                <div class="stat-label">Dirty Beds</div>
+                                <div class="stat-change negative">
+                                    <i class="fas fa-arrow-down"></i> Needs cleaning
+                                </div>
+                            </div>
+                            <div class="stat-icon dirty">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 15%"></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-number">$1,220</div>
+                                <div class="stat-label">Today's Revenue</div>
+                                <div class="stat-change positive">
+                                    <i class="fas fa-arrow-up"></i> +15% vs yesterday
+                                </div>
+                            </div>
+                            <div class="stat-icon revenue">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FINANCIAL OVERVIEW -->
+                <div class="financial-overview">
+                    <h3 class="chart-title" style="margin-bottom: 20px;">
+                        <i class="fas fa-chart-line" style="margin-right: 10px;"></i>
+                        Financial Overview
+                    </h3>
+                    <div class="financial-grid">
+                        <div class="financial-item">
+                            <div class="financial-amount income">$2,450</div>
+                            <div class="financial-label">Weekly Income</div>
+                        </div>
+                        <div class="financial-item">
+                            <div class="financial-amount" style="color: #e74c3c;">$1,230</div>
+                            <div class="financial-label">Weekly Expenses</div>
+                        </div>
+                        <div class="financial-item">
+                            <div class="financial-amount" style="color: #f39c12;">$1,220</div>
+                            <div class="financial-label">Net Profit</div>
+                        </div>
+                        <div class="financial-item">
+                            <div class="financial-amount" style="color: #9b59b6;">89%</div>
+                            <div class="financial-label">Occupancy Rate</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAIN CONTENT GRID -->
+                <div class="content-grid">
+                    <!-- OCCUPANCY CHART -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">
+                                <i class="fas fa-chart-area" style="margin-right: 10px;"></i>
+                                Occupancy Trends (7 Days)
+                            </h3>
+                        </div>
+                        <canvas id="occupancyChart" width="400" height="200"></canvas>
+                    </div>
+
+                    <!-- ACTIVITY FEED -->
+                    <div class="activity-feed">
+                        <h3 class="chart-title" style="margin-bottom: 20px;">
+                            <i class="fas fa-clock" style="margin-right: 10px;"></i>
+                            Recent Activity
+                        </h3>
+
+                        <div class="activity-item">
+                            <div class="activity-icon checkin">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">New Check-in</div>
+                                <div class="activity-desc">Sophie Dubois checked into Private Room 1</div>
+                                <div class="activity-time">5 minutes ago</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon sale">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">POS Sale</div>
+                                <div class="activity-desc">Beer Corona x2 + Sandwich sold to Room A3</div>
+                                <div class="activity-time">12 minutes ago</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon payment">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Payment Received</div>
+                                <div class="activity-desc">$45.00 payment for Bed A1 - John Smith</div>
+                                <div class="activity-time">25 minutes ago</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon checkout">
+                                <i class="fas fa-user-minus"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Check-out</div>
+                                <div class="activity-desc">Jake Thompson checked out from Bed B3</div>
+                                <div class="activity-time">45 minutes ago</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon checkin">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">New Check-in</div>
+                                <div class="activity-desc">Hans Mueller checked into Bed B2</div>
+                                <div class="activity-time">1 hour ago</div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon sale">
+                                <i class="fas fa-coffee"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Coffee Sale</div>
+                                <div class="activity-desc">Morning coffee x3 + pastries</div>
+                                <div class="activity-time">1.5 hours ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BEDS OVERVIEW -->
+                <div class="beds-overview">
+                    <!-- DORM ROOMS -->
+                    <div class="room-section">
+                        <div class="room-title">
+                            <i class="fas fa-door-open"></i>
+                            Dorm Rooms
+                        </div>
+                        <div class="bed-grid">
+                            <div class="bed-status occupied">
+                                <div class="bed-number">A1</div>
+                                <div class="bed-guest">John S.</div>
+                            </div>
+                            <div class="bed-status clean">
+                                <div class="bed-number">A2</div>
+                                <div class="bed-guest">Available</div>
+                            </div>
+                            <div class="bed-status occupied">
+                                <div class="bed-number">A3</div>
+                                <div class="bed-guest">Maria G.</div>
+                            </div>
+                            <div class="bed-status dirty">
+                                <div class="bed-number">B1</div>
+                                <div class="bed-guest">Cleaning</div>
+                            </div>
+                            <div class="bed-status occupied">
+                                <div class="bed-number">B2</div>
+                                <div class="bed-guest">Hans M.</div>
+                            </div>
+                            <div class="bed-status clean">
+                                <div class="bed-number">B3</div>
+                                <div class="bed-guest">Available</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PRIVATE ROOMS -->
+                    <div class="room-section">
+                        <div class="room-title">
+                            <i class="fas fa-key"></i>
+                            Private Rooms
+                        </div>
+                        <div class="bed-grid">
+                            <div class="bed-status occupied">
+                                <div class="bed-number">PR1</div>
+                                <div class="bed-guest">Sophie D.</div>
+                            </div>
+                            <div class="bed-status clean">
+                                <div class="bed-number">PR2</div>
+                                <div class="bed-guest">Available</div>
+                            </div>
+                            <div class="bed-status dirty">
+                                <div class="bed-number">PR3</div>
+                                <div class="bed-guest">Cleaning</div>
+                            </div>
+                            <div class="bed-status clean">
+                                <div class="bed-number">PR4</div>
+                                <div class="bed-guest">Available</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REVENUE BREAKDOWN -->
+                    <div class="room-section">
+                        <div class="room-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Revenue Breakdown
+                        </div>
+                        <canvas id="revenueChart" width="300" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other views remain hidden -->
+            <div id="beds-view" class="hidden">
+                <h1 style="color: white;">Beds Management - Click Dashboard to return</h1>
+            </div>
+            <div id="guests-view" class="hidden">
+                <h1 style="color: white;">Guests Management - Click Dashboard to return</h1>
+            </div>
+            <div id="pos-view" class="hidden">
+                <h1 style="color: white;">POS System - Click Dashboard to return</h1>
+            </div>
+            <div id="staff-view" class="hidden">
+                <h1 style="color: white;">Staff Management - Click Dashboard to return</h1>
+            </div>
+            <div id="cash-view" class="hidden">
+                <h1 style="color: white;">Cash Management - Click Dashboard to return</h1>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+            const dateString = now.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+
+            document.getElementById('current-time').textContent = timeString;
+            document.getElementById('current-date').textContent = dateString;
+        }
+
+        // Navigation
+        function showView(viewName) {
+            document.querySelectorAll('[id$="-view"]').forEach(view => {
+                view.classList.add('hidden');
+            });
+            document.getElementById(viewName + '-view').classList.remove('hidden');
+
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Initialize charts
+        function initCharts() {
+            // Occupancy Chart
+            const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
+            new Chart(occupancyCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Occupancy Rate (%)',
+                        data: [65, 78, 82, 89, 95, 92, 87],
+                        borderColor: 'rgba(46, 204, 113, 1)',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgba(46, 204, 113, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'white',
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.8)',
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Accommodation', 'POS Sales', 'Tours', 'Laundry'],
+                    datasets: [{
+                        data: [1850, 400, 200, 100],
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.8)',
+                            'rgba(46, 204, 113, 0.8)',
+                            'rgba(243, 156, 18, 0.8)',
+                            'rgba(155, 89, 182, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(52, 152, 219, 1)',
+                            'rgba(46, 204, 113, 1)',
+                            'rgba(243, 156, 18, 1)',
+                            'rgba(155, 89, 182, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'white',
+                                font: {
+                                    size: 12
+                                },
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            setInterval(updateTime, 1000);
+            initCharts();
+
+            // Add animation delays for cards
+            const cards = document.querySelectorAll('.stat-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+
+        // Add some interactivity to bed statuses
+        document.querySelectorAll('.bed-status').forEach(bed => {
+            bed.addEventListener('click', function() {
+                if (this.classList.contains('clean')) {
+                    alert(`Check-in available for ${this.querySelector('.bed-number').textContent}`);
+                } else if (this.classList.contains('occupied')) {
+                    const guest = this.querySelector('.bed-guest').textContent;
+                    alert(`${this.querySelector('.bed-number').textContent} - Guest: ${guest}`);
+                } else if (this.classList.contains('dirty')) {
+                    alert(`${this.querySelector('.bed-number').textContent} needs cleaning`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

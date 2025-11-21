@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "name": "almanik-pms",
+  "builds": [
+    {
+      "src": "server-simple.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server-simple.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/server-simple.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
