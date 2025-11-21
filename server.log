@@ -1,0 +1,128 @@
+✅ Connected to SQLite (Development)
+✅ SQLite tables initialized
+🗄️ Database connected successfully
+📊 Creating tables...
+👥 Creating demo users...
+✅ Database initialization complete
+🚀 Almanik PMS Simple running on port 3000
+🌐 Dashboard: http://localhost:3000
+🔧 API: http://localhost:3000/api
+🔑 Login: admin / admin123
+
+✅ Connected to SQLite (Development)
+✅ SQLite tables initialized
+Error checking availability: Error: SQLITE_ERROR: no such column: confirmation_code
+--> in Database#all('\n' +
+  '    SELECT id, confirmation_code, check_in, check_out, status\n' +
+  '    FROM bookings\n' +
+  '    WHERE bed_id = $1\n' +
+  "      AND status IN ('pending', 'confirmed', 'checked_in')\n" +
+  '      AND (\n' +
+  '        (check_in <= $2 AND check_out > $2) OR\n' +
+  '        (check_in < $3 AND check_out >= $3) OR\n' +
+  '        (check_in >= $2 AND check_out <= $3)\n' +
+  '      )\n' +
+  '      \n' +
+  '  ', [ 1, '2025-11-25', '2025-11-28' ], [Function (anonymous)])
+    at /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:71:17
+    at new Promise (<anonymous>)
+    at DatabaseAdapter.query (/home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:70:14)
+    at async checkBedAvailability (/home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/modules/reservations.js:89:31)
+    at async /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/modules/reservations.js:755:28 {
+  errno: 1,
+  code: 'SQLITE_ERROR',
+  __augmented: true
+}
+Error creating reservation: Error: SQLITE_ERROR: no such column: confirmation_code
+--> in Database#all('\n' +
+  '    SELECT id, confirmation_code, check_in, check_out, status\n' +
+  '    FROM bookings\n' +
+  '    WHERE bed_id = $1\n' +
+  "      AND status IN ('pending', 'confirmed', 'checked_in')\n" +
+  '      AND (\n' +
+  '        (check_in <= $2 AND check_out > $2) OR\n' +
+  '        (check_in < $3 AND check_out >= $3) OR\n' +
+  '        (check_in >= $2 AND check_out <= $3)\n' +
+  '      )\n' +
+  '      \n' +
+  '  ', [ 1, '2025-11-25', '2025-11-28' ], [Function (anonymous)])
+    at /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:71:17
+    at new Promise (<anonymous>)
+    at DatabaseAdapter.query (/home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:70:14)
+    at async checkBedAvailability (/home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/modules/reservations.js:89:31)
+    at async /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/modules/reservations.js:245:26 {
+  errno: 1,
+  code: 'SQLITE_ERROR',
+  __augmented: true
+}
+Error creating reservation: Error: SQLITE_ERROR: no such column: confirmation_code
+--> in Database#all('\n' +
+  '    SELECT id, confirmation_code, check_in, check_out, status\n' +
+  '    FROM bookings\n' +
+  '    WHERE bed_id = $1\n' +
+  "      AND status IN ('pending', 'confirmed', 'checked_in')\n" +
+  '      AND (\n' +
+  '        (check_in <= $2 AND check_out > $2) OR\n' +
+  '        (check_in < $3 AND check_out >= $3) OR\n' +
+  '        (check_in >= $2 AND check_out <= $3)\n' +
+  '      )\n' +
+  '      \n' +
+  '  ', [ 3, '2025-11-25', '2025-11-28' ], [Function (anonymous)])
+    at /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:71:17
+    at new Promise (<anonymous>)
+    at DatabaseAdapter.query (/home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:70:14)
+    at async checkBedAvailability (/home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/modules/reservations.js:89:31)
+    at async /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/modules/reservations.js:245:26 {
+  errno: 1,
+  code: 'SQLITE_ERROR',
+  __augmented: true
+}
+Error confirming reservation: Error: SQLITE_ERROR: no such column: updated_at
+--> in Database#run('\n' +
+  '      UPDATE bookings\n' +
+  "      SET status = 'confirmed', updated_at = CURRENT_TIMESTAMP\n" +
+  '      WHERE id = $1\n' +
+  '    ', [ '3' ], [Function (anonymous)])
+    at /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:118:17
+    at new Promise (<anonymous>)
+    at DatabaseAdapter.run (/home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:117:14)
+    at async /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/modules/reservations.js:643:5 {
+  errno: 1,
+  code: 'SQLITE_ERROR',
+  __augmented: true
+}
+Error updating reservation: Error: SQLITE_ERROR: no such column: updated_at
+--> in Database#run('\n' +
+  '      UPDATE bookings\n' +
+  '      SET\n' +
+  '        check_in = $1,\n' +
+  '        check_out = $2,\n' +
+  '        bed_id = $3,\n' +
+  '        nights = $4,\n' +
+  '        total = $5,\n' +
+  '        status = $6,\n' +
+  '        updated_at = CURRENT_TIMESTAMP\n' +
+  '      WHERE id = $7\n' +
+  '    ', [ '2025-11-25', '2025-11-29', 5, 4, 100, 'pending', '3' ], [Function (anonymous)])
+    at /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:118:17
+    at new Promise (<anonymous>)
+    at DatabaseAdapter.run (/home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:117:14)
+    at async /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/modules/reservations.js:460:5 {
+  errno: 1,
+  code: 'SQLITE_ERROR',
+  __augmented: true
+}
+Error cancelling reservation: Error: SQLITE_ERROR: no such column: updated_at
+--> in Database#run('\n' +
+  '      UPDATE bookings\n' +
+  "      SET status = 'cancelled', cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP\n" +
+  '      WHERE id = $1\n' +
+  '    ', [ '4' ], [Function (anonymous)])
+    at /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:118:17
+    at new Promise (<anonymous>)
+    at DatabaseAdapter.run (/home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/db-adapter.js:117:14)
+    at async /home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/server/modules/reservations.js:552:5 {
+  errno: 1,
+  code: 'SQLITE_ERROR',
+  __augmented: true
+}

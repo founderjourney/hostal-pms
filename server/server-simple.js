@@ -551,6 +551,16 @@ const requireAuth = (req, res, next) => {
   }
 };
 
+// ============================================
+// IMPORT MODULES
+// ============================================
+
+const reservationsModule = require('./modules/reservations');
+
+// ============================================
+// MIDDLEWARES
+// ============================================
+
 // Permission check middleware
 const requirePermission = (module, action) => {
   return (req, res, next) => {
@@ -578,6 +588,21 @@ const requirePermission = (module, action) => {
 // ================================================
 // USER MANAGEMENT ENDPOINTS
 // ================================================
+
+// ============================================
+// MODULE ROUTES
+// ============================================
+
+// Reservations module (new)
+app.use('/api/reservations', requireAuth, (req, res, next) => {
+  // Attach session info for the module to use
+  req.session = req.user;
+  next();
+}, reservationsModule);
+
+// ============================================
+// API ROUTES
+// ============================================
 
 // Get all users (admin only)
 app.get('/api/users', requireAuth, requirePermission('users', 'read'), async (req, res) => {

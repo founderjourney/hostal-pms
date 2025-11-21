@@ -4256,6 +4256,10 @@
 
         function renderTodayTours(tours) {
             const container = document.getElementById('today-tours');
+            if (!container) {
+                console.warn('today-tours container not found - skipping render');
+                return;
+            }
             container.innerHTML = tours.map(tour => `
                 <div style="background: rgba(255,255,255,0.95); box-shadow: 0 8px 32px rgba(0,0,0,0.1); border-radius: 10px; padding: 15px; border-left: 4px solid #3498db;">
                     <h3 style="color: #2c3e50; margin: 0 0 10px 0;">🚶 ${tour.name}</h3>
@@ -4346,7 +4350,7 @@
                     refreshBeds();
                     break;
                 case 'guests':
-                    loadAllGuests();
+                    refreshGuests();
                     break;
                 case 'pos':
                     loadProducts();
