@@ -3933,9 +3933,49 @@
 
         async function processCheckin(bedId, guestId) {
             try {
-                const result = await apiCall(`/beds/${bedId}/checkin`, 'POST', { guestId });
+                // Get bed details for price calculation
+                const beds = await apiCall('/beds');
+                const bed = beds.find(b => b.id === bedId);
+
+                if (!bed) {
+                    alert('Cama no encontrada');
+                    return;
+                }
+
+                // Prompt for check-in date
+                const checkInDate = prompt('Fecha de Check-in (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+                if (!checkInDate) return;
+
+                // Prompt for check-out date
+                const checkOutDate = prompt('Fecha de Check-out (YYYY-MM-DD):', new Date(Date.now() + 86400000).toISOString().split('T')[0]);
+                if (!checkOutDate) return;
+
+                // Validate dates
+                if (new Date(checkOutDate) <= new Date(checkInDate)) {
+                    alert('La fecha de check-out debe ser posterior a la fecha de check-in');
+                    return;
+                }
+
+                // Calculate nights
+                const nights = Math.ceil((new Date(checkOutDate) - new Date(checkInDate)) / (1000 * 60 * 60 * 24));
+                const total = bed.price * nights;
+
+                // Confirm booking details
+                if (!confirm(`Confirmar reserva:\nCama: ${bed.name}\nNoches: ${nights}\nPrecio por noche: $${bed.price}\nTotal: $${total}\n\n¿Proceder con el check-in?`)) {
+                    return;
+                }
+
+                // Make API call with correct endpoint and data structure
+                const result = await apiCall(`/checkin`, 'POST', {
+                    guest_id: guestId,
+                    bed_id: bedId,
+                    check_in: checkInDate,
+                    check_out: checkOutDate,
+                    total: total
+                });
+
                 if (result) {
-                    alert('Check-in realizado exitosamente');
+                    alert(`✅ Check-in realizado exitosamente!\n💰 Total: $${total}\n🌙 Noches: ${nights}`);
                     localStorage.removeItem('selectedGuestForCheckin');
                     await refreshBeds();
                     await refreshGuests();
@@ -3947,18 +3987,47 @@
         }
 
         async function startCheckout(bedId) {
-            if (confirm('¿Estás seguro de que deseas hacer check-out de esta cama?')) {
-                try {
-                    const result = await apiCall(`/beds/${bedId}/checkout`, 'POST');
+            try {
+                // Get balance information
+                const balance = await apiCall(`/balance/${bedId}`);
+
+                let confirmMessage = '¿Estás seguro de que deseas hacer check-out de esta cama?';
+                if (balance) {
+                    confirmMessage = `Balance de la cama:\n\nTotal Cargos: $${balance.totalCharges || 0}\nTotal Pagos: $${balance.totalPayments || 0}\nBalance Pendiente: $${balance.balance || 0}\n\n¿Deseas proceder con el check-out?`;
+                }
+
+                if (confirm(confirmMessage)) {
+                    // Prompt for payment if there's a balance
+                    let paymentAmount = 0;
+                    let paymentMethod = 'cash';
+
+                    if (balance && balance.balance > 0) {
+                        const paymentInput = prompt(`Balance pendiente: $${balance.balance}\n\nIngresa el monto del pago (o 0 para dejar pendiente):`, balance.balance);
+                        if (paymentInput === null) return; // User cancelled
+
+                        paymentAmount = parseFloat(paymentInput) || 0;
+
+                        if (paymentAmount > 0) {
+                            const methodInput = prompt('Método de pago:\n1. Efectivo (cash)\n2. Tarjeta (card)\n\nIngresa 1 o 2:', '1');
+                            paymentMethod = methodInput === '2' ? 'card' : 'cash';
+                        }
+                    }
+
+                    // Make API call with correct endpoint
+                    const result = await apiCall(`/checkout/${bedId}`, 'POST', {
+                        payment_amount: paymentAmount,
+                        payment_method: paymentMethod
+                    });
+
                     if (result) {
-                        alert('Check-out realizado exitosamente');
+                        alert(`✅ Check-out realizado exitosamente!\n💳 Pago: $${paymentAmount}\n📋 Método: ${paymentMethod === 'cash' ? 'Efectivo' : 'Tarjeta'}`);
                         await refreshBeds();
                         await refreshGuests();
                     }
-                } catch (error) {
-                    console.error('Error processing checkout:', error);
-                    alert('Error al procesar el check-out: ' + (error.message || 'Error desconocido'));
                 }
+            } catch (error) {
+                console.error('Error processing checkout:', error);
+                alert('Error al procesar el check-out: ' + (error.message || 'Error desconocido'));
             }
         }
 
