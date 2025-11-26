@@ -2580,14 +2580,23 @@
                 });
 
                 // Show selected view
-                document.getElementById(viewName + '-view').classList.remove('hidden');
+                const targetView = document.getElementById(viewName + '-view');
+                if (targetView) {
+                    targetView.classList.remove('hidden');
+                } else {
+                    console.error('View not found:', viewName + '-view');
+                    return;
+                }
 
                 // Update navigation buttons
                 document.querySelectorAll('.nav-button').forEach(btn => {
                     btn.classList.remove('active');
                 });
-                if (event && event.target) {
-                    event.target.classList.add('active');
+
+                // Find and activate the button that was clicked
+                const clickedButton = document.querySelector(`button[onclick*="showView('${viewName}')"]`);
+                if (clickedButton) {
+                    clickedButton.classList.add('active');
                 }
 
                 // Handle specific view actions
