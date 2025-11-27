@@ -831,10 +831,10 @@ router.get('/daily-report', async (req, res) => {
     const params = [];
 
     if (date) {
-      dateCondition = isSqlite ? `DATE(created_at) = ?` : `DATE(created_at) = $1`;
+      dateCondition = isSqlite ? `DATE(t.created_at) = ?` : `DATE(t.created_at) = $1`;
       params.push(date);
     } else {
-      dateCondition = isSqlite ? `DATE(created_at) = DATE('now')` : `DATE(created_at) = CURRENT_DATE`;
+      dateCondition = isSqlite ? `DATE(t.created_at) = DATE('now')` : `DATE(t.created_at) = CURRENT_DATE`;
     }
 
     // Get sessions for the day

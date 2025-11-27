@@ -1118,16 +1118,6 @@
                 <i class="fas fa-coins"></i>Caja
             </button>
 
-            <div class="nav-item" onclick="showSection('analytics')">
-                <i class="fas fa-chart-line"></i> Analytics
-            </div>
-            <a href="/reports-advanced.html" class="nav-item" style="text-decoration: none; color: inherit;">
-                <i class="fas fa-brain"></i> AI Reports
-            </a>
-            <div class="nav-item" onclick="showSection('settings')">
-                <i class="fas fa-map-marked-alt"></i>Paseos
-            </div>
-
             <button class="nav-button" onclick="showView('reports')">
                 <i class="fas fa-chart-bar"></i>Reportes
             </button>
@@ -1790,8 +1780,8 @@
                     </div>
                 </div>
 
-                <div id="tours-view" class="hidden">
-                    <div
+            <div id="tours-view" class="hidden">
+                <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                         <h1 style="color: #2c3e50; margin: 0;">🚶 Gestión de Paseos</h1>
                         <button onclick="showAddTourModal()"
@@ -1848,11 +1838,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Users View -->
-        <div id="users-view" class="hidden">
+            <!-- Users View -->
+            <div id="users-view" class="hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <h1 style="color: #2c3e50; margin: 0;">👥 Gestión de Usuarios</h1>
                 <button onclick="showAddUserModal()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
@@ -1868,6 +1856,7 @@
                 </div>
             </div>
         </div>
+        </div> <!-- End of main-content -->
 
         <!-- Modal para gestión de camas -->
         <div id="bed-modal"
