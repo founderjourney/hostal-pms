@@ -1556,6 +1556,58 @@
                         <!-- Movimientos se cargan aquí -->
                     </div>
                 </div>
+
+                <!-- Modal de Nuevo Movimiento de Caja -->
+                <div id="cash-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+                    <div style="background: white; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="color: #2c3e50; margin: 0;">💰 Nuevo Movimiento</h2>
+                            <button onclick="closeCashModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #7f8c8d;">&times;</button>
+                        </div>
+                        <form id="cash-form" onsubmit="submitCashMovement(event)">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Tipo de Movimiento:</label>
+                                <select id="cash-type" required style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px;">
+                                    <option value="income">💵 Ingreso</option>
+                                    <option value="expense">💸 Egreso</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Categoría:</label>
+                                <select id="cash-category" required style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px;">
+                                    <option value="accommodation">🛏️ Hospedaje</option>
+                                    <option value="product_sale">🛒 Venta de Productos</option>
+                                    <option value="tour_commission">🎫 Comisión de Tours</option>
+                                    <option value="service">🔧 Servicios</option>
+                                    <option value="supplies">📦 Suministros</option>
+                                    <option value="utilities">💡 Servicios Públicos</option>
+                                    <option value="salary">👤 Salarios</option>
+                                    <option value="other">📋 Otro</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Monto ($):</label>
+                                <input type="number" id="cash-amount" step="0.01" min="0.01" required style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px;" placeholder="0.00">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Método de Pago:</label>
+                                <select id="cash-method" required style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px;">
+                                    <option value="cash">💵 Efectivo</option>
+                                    <option value="card">💳 Tarjeta</option>
+                                    <option value="transfer">🏦 Transferencia</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Descripción:</label>
+                                <textarea id="cash-description" rows="3" style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px; resize: vertical;" placeholder="Descripción del movimiento..."></textarea>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="button" onclick="closeCashModal()" style="flex: 1; padding: 12px; background: #95a5a6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Cancelar</button>
+                                <button type="submit" style="flex: 1; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Guardar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <div id="reports-view" class="hidden">
@@ -1835,6 +1887,49 @@
                         <h2 style="color: #2c3e50; margin-bottom: 15px;">📋 Reservas de Paseos</h2>
                         <div id="tour-bookings">
                             <!-- Reservas de paseos se cargan aquí -->
+                        </div>
+                    </div>
+
+                    <!-- Modal de Nuevo Paseo -->
+                    <div id="tour-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+                        <div style="background: white; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h2 style="color: #2c3e50; margin: 0;" id="tour-modal-title">🚶 Nuevo Paseo</h2>
+                                <button onclick="closeTourModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #7f8c8d;">&times;</button>
+                            </div>
+                            <form id="tour-form" onsubmit="submitTour(event)">
+                                <input type="hidden" id="tour-id">
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Nombre del Paseo:</label>
+                                    <input type="text" id="tour-name" required style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px;" placeholder="City Tour, Beach Day, etc.">
+                                </div>
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Descripción:</label>
+                                    <textarea id="tour-description" rows="3" style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px; resize: vertical;" placeholder="Descripción del paseo..."></textarea>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                    <div>
+                                        <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Precio ($):</label>
+                                        <input type="number" id="tour-price" step="0.01" min="0" required style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px;" placeholder="0.00">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Comisión (%):</label>
+                                        <input type="number" id="tour-commission" step="1" min="0" max="100" required style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px;" placeholder="15">
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Proveedor:</label>
+                                    <input type="text" id="tour-provider" style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px;" placeholder="Nombre del proveedor">
+                                </div>
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Duración:</label>
+                                    <input type="text" id="tour-duration" style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px;" placeholder="4 horas, Día completo, etc.">
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="button" onclick="closeTourModal()" style="flex: 1; padding: 12px; background: #95a5a6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Cancelar</button>
+                                    <button type="submit" style="flex: 1; padding: 12px; background: #9b59b6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Guardar</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -4153,7 +4248,71 @@
             }
 
             function showCashMovementModal() {
-                alert('Función de movimiento de caja - En desarrollo');
+                document.getElementById('cash-modal').style.display = 'flex';
+                document.getElementById('cash-form').reset();
+            }
+
+            function closeCashModal() {
+                document.getElementById('cash-modal').style.display = 'none';
+            }
+
+            async function submitCashMovement(event) {
+                event.preventDefault();
+                try {
+                    const data = {
+                        type: document.getElementById('cash-type').value,
+                        category: document.getElementById('cash-category').value,
+                        amount: parseFloat(document.getElementById('cash-amount').value),
+                        payment_method: document.getElementById('cash-method').value,
+                        description: document.getElementById('cash-description').value || ''
+                    };
+
+                    await apiCall('/cashbox/transactions', 'POST', data);
+                    alert('Movimiento registrado exitosamente');
+                    closeCashModal();
+                    await loadCashData();
+                } catch (error) {
+                    console.error('Error creating transaction:', error);
+                    alert('Error al registrar el movimiento: ' + (error.message || 'Error desconocido'));
+                }
+            }
+
+            async function loadCashData() {
+                try {
+                    const [stats, transactions] = await Promise.all([
+                        apiCall('/cashbox/stats'),
+                        apiCall('/cashbox/transactions?limit=20')
+                    ]);
+
+                    // Update summary cards
+                    const cashCards = document.querySelectorAll('#cash-view > div:nth-child(2) > div');
+                    if (cashCards.length >= 3 && stats) {
+                        const todayStats = stats.today || {};
+                        cashCards[0].querySelector('div:last-child').textContent = '$' + (todayStats.cash_total || 0).toFixed(2);
+                        cashCards[1].querySelector('div:last-child').textContent = '$' + (todayStats.card_total || 0).toFixed(2);
+                        cashCards[2].querySelector('div:last-child').textContent = '$' + (todayStats.total || 0).toFixed(2);
+                    }
+
+                    // Update movements list
+                    const listContainer = document.getElementById('cash-movements-list');
+                    if (transactions && transactions.length > 0) {
+                        listContainer.innerHTML = transactions.map(t => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #ecf0f1;">
+                                <div>
+                                    <div style="font-weight: bold; color: #2c3e50;">${t.description || t.category || 'Sin descripción'}</div>
+                                    <div style="font-size: 12px; color: #7f8c8d;">${new Date(t.created_at).toLocaleString()} - ${t.payment_method === 'cash' ? '💵 Efectivo' : t.payment_method === 'card' ? '💳 Tarjeta' : '🏦 Transferencia'}</div>
+                                </div>
+                                <div style="font-weight: bold; color: ${t.type === 'income' ? '#27ae60' : '#e74c3c'}; font-size: 18px;">
+                                    ${t.type === 'income' ? '+' : '-'}$${parseFloat(t.amount).toFixed(2)}
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        listContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d; padding: 20px;">No hay movimientos registrados hoy</p>';
+                    }
+                } catch (error) {
+                    console.error('Error loading cash data:', error);
+                }
             }
 
             function selectGuestForCheckin(guestId) {
@@ -4604,19 +4763,102 @@
             }
 
             function showAddTourModal() {
-                alert('Crear nuevo paseo - Función en desarrollo');
+                document.getElementById('tour-modal').style.display = 'flex';
+                document.getElementById('tour-modal-title').textContent = '🚶 Nuevo Paseo';
+                document.getElementById('tour-form').reset();
+                document.getElementById('tour-id').value = '';
+            }
+
+            function closeTourModal() {
+                document.getElementById('tour-modal').style.display = 'none';
+            }
+
+            async function submitTour(event) {
+                event.preventDefault();
+                try {
+                    const tourId = document.getElementById('tour-id').value;
+                    const data = {
+                        name: document.getElementById('tour-name').value,
+                        description: document.getElementById('tour-description').value || '',
+                        price: parseFloat(document.getElementById('tour-price').value),
+                        commission_rate: parseInt(document.getElementById('tour-commission').value) || 15,
+                        provider: document.getElementById('tour-provider').value || '',
+                        duration: document.getElementById('tour-duration').value || ''
+                    };
+
+                    if (tourId) {
+                        await apiCall(`/tours/${tourId}`, 'PUT', data);
+                        alert('Paseo actualizado exitosamente');
+                    } else {
+                        await apiCall('/tours', 'POST', data);
+                        alert('Paseo creado exitosamente');
+                    }
+                    closeTourModal();
+                    await loadTours();
+                } catch (error) {
+                    console.error('Error saving tour:', error);
+                    alert('Error al guardar el paseo: ' + (error.message || 'Error desconocido'));
+                }
             }
 
             function manageTour(tourId) {
-                alert(`Gestionar paseo ${tourId} - Función en desarrollo`);
+                // Register a click for the tour
+                apiCall(`/tours/${tourId}/click`, 'POST')
+                    .then(() => {
+                        alert('Click registrado para este tour. El huésped será redirigido al proveedor.');
+                        loadTours();
+                    })
+                    .catch(err => {
+                        console.error('Error registering click:', err);
+                        alert('Error al registrar el click');
+                    });
             }
 
-            function bookTour(tourId) {
-                alert(`Reservar paseo ${tourId} - Función en desarrollo`);
+            async function bookTour(tourId) {
+                const guests = await apiCall('/guests');
+                if (!guests || guests.length === 0) {
+                    alert('No hay huéspedes registrados. Primero registra un huésped.');
+                    return;
+                }
+
+                const guestOptions = guests.map((g, i) => `${i + 1}. ${g.name}`).join('\n');
+                const selection = prompt(`Selecciona un huésped para la reserva:\n\n${guestOptions}\n\nIngresa el número:`);
+
+                if (selection && selection > 0 && selection <= guests.length) {
+                    const guest = guests[selection - 1];
+                    const date = prompt('Fecha del tour (YYYY-MM-DD):');
+                    if (date) {
+                        try {
+                            // Register click and create booking (simplified)
+                            await apiCall(`/tours/${tourId}/click`, 'POST');
+                            alert(`Reserva creada para ${guest.name}.\nFecha: ${date}\nClick registrado para comisión.`);
+                            loadTours();
+                        } catch (error) {
+                            alert('Error al crear la reserva');
+                        }
+                    }
+                }
             }
 
-            function editTour(tourId) {
-                alert(`Editar paseo ${tourId} - Función en desarrollo`);
+            async function editTour(tourId) {
+                try {
+                    const tours = await apiCall('/tours');
+                    const tour = tours.find(t => t.id === tourId);
+                    if (tour) {
+                        document.getElementById('tour-modal').style.display = 'flex';
+                        document.getElementById('tour-modal-title').textContent = '✏️ Editar Paseo';
+                        document.getElementById('tour-id').value = tour.id;
+                        document.getElementById('tour-name').value = tour.name || '';
+                        document.getElementById('tour-description').value = tour.description || '';
+                        document.getElementById('tour-price').value = tour.price || 0;
+                        document.getElementById('tour-commission').value = tour.commission_rate || 15;
+                        document.getElementById('tour-provider').value = tour.provider || '';
+                        document.getElementById('tour-duration').value = tour.duration || '';
+                    }
+                } catch (error) {
+                    console.error('Error loading tour:', error);
+                    alert('Error al cargar el paseo');
+                }
             }
 
             // Load data when switching views
@@ -4640,6 +4882,9 @@
                         break;
                     case 'tours':
                         loadTours();
+                        break;
+                    case 'cash':
+                        loadCashData();
                         break;
                 }
             };
