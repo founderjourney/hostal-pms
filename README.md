@@ -1,8 +1,8 @@
 # ALMANIK PMS - Sistema de Gestion Hotelera
 
-## SISTEMA LISTO PARA PRODUCCION - v1.12.2
+## SISTEMA LISTO PARA PRODUCCION - v1.12.3
 
-**Version:** 1.12.2
+**Version:** 1.12.3
 **Estado:** Auditado y Verificado - 100% Funcional
 **Ultima actualizacion:** 2025-11-27
 
@@ -297,6 +297,17 @@ bash scripts/test-modules.sh
 
 ## CHANGELOG
 
+### v1.12.3 (2025-11-27) - OPTIMIZACION DE RENDIMIENTO
+**Performance:**
+- Agregado endpoint `/ping` (warmup sin DB)
+- Agregado endpoint `/warmup` (pre-calienta conexion DB)
+- Optimizado pool de conexiones PostgreSQL para serverless
+- Configurado `maxDuration: 30` en Vercel
+
+**Docs:**
+- Guia de optimizacion de rendimiento
+- Instrucciones para configurar keep-alive
+
 ### v1.12.2 (2025-11-27) - AUDITORIA COMPLETA
 **Bug Fixes:**
 - Fix: Cashbox daily-report columna ambigua
@@ -336,6 +347,6 @@ bash scripts/test-modules.sh
 ---
 
 **Estado:** PRODUCCION READY
-**Version:** 1.12.2
+**Version:** 1.12.3
 **Auditoria:** 40/40 endpoints (100%)
 **Fecha:** 2025-11-27

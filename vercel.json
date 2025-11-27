@@ -3,10 +3,30 @@
   "builds": [
     {
       "src": "server/server-simple.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
     }
   ],
+  "functions": {
+    "server/server-simple.js": {
+      "maxDuration": 30
+    }
+  },
   "routes": [
+    {
+      "src": "/ping",
+      "dest": "/server/server-simple.js"
+    },
+    {
+      "src": "/warmup",
+      "dest": "/server/server-simple.js"
+    },
+    {
+      "src": "/health",
+      "dest": "/server/server-simple.js"
+    },
     {
       "src": "/api/(.*)",
       "dest": "/server/server-simple.js"

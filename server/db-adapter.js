@@ -15,14 +15,18 @@ class DatabaseAdapter {
       // PostgreSQL para producción
       console.log('🔗 Connecting to PostgreSQL...');
 
+      // Neon Serverless optimizations for cold start
       this.pool = new Pool({
         connectionString: process.env.DATABASE_URL,
         ssl: {
           rejectUnauthorized: false
         },
-        connectionTimeoutMillis: 10000,
-        idleTimeoutMillis: 30000,
-        max: 10,
+        // Aggressive connection settings for serverless
+        connectionTimeoutMillis: 20000, // 20s for cold starts
+        idleTimeoutMillis: 10000,       // Close idle connections faster
+        max: 5,                          // Fewer connections for serverless
+        min: 0,                          // Don't maintain idle connections
+        allowExitOnIdle: true,           // Allow pool to close when idle
         application_name: 'almanik-pms'
       });
 

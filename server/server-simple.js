@@ -905,6 +905,34 @@ const requirePermission = (module, action) => {
 // MONITORING & HEALTH ENDPOINTS
 // ================================================
 
+// Ping endpoint - ultra-fast, no database (for Vercel warm-up)
+app.get('/ping', (req, res) => {
+  res.json({
+    pong: true,
+    timestamp: Date.now(),
+    uptime: process.uptime()
+  });
+});
+
+// Warmup endpoint - pre-warms database connection
+app.get('/warmup', async (req, res) => {
+  const startTime = Date.now();
+  try {
+    await dbAdapter.get('SELECT 1 as warmup');
+    res.json({
+      status: 'warm',
+      dbResponseTime: Date.now() - startTime,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'cold',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Health check endpoint (public, no auth)
 app.get('/health', async (req, res) => {
   try {
