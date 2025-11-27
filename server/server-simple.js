@@ -868,6 +868,9 @@ app.get('/api/reports/insights', async (req, res) => {
 const reservationsModule = require('./modules/reservations');
 const icalSyncModule = require('./modules/ical-sync');
 const analyticsModule = require('./modules/analytics');
+const staffModule = require('./modules/staff');
+const tasksModule = require('./modules/tasks');
+const cashboxModule = require('./modules/cashbox');
 const ICalSyncCron = require('./cron/sync-ical');
 
 // ============================================
@@ -970,6 +973,27 @@ app.use('/api/analytics', requireAuth, (req, res, next) => {
   req.app.locals.db = dbAdapter;
   next();
 }, analyticsModule);
+
+// Staff Management module
+app.use('/api/staff', requireAuth, (req, res, next) => {
+  req.app.locals.db = dbAdapter;
+  req.session = req.user;
+  next();
+}, staffModule);
+
+// Tasks/Maintenance module
+app.use('/api/tasks', requireAuth, (req, res, next) => {
+  req.app.locals.db = dbAdapter;
+  req.session = req.user;
+  next();
+}, tasksModule);
+
+// Cashbox/Finance module
+app.use('/api/cashbox', requireAuth, (req, res, next) => {
+  req.app.locals.db = dbAdapter;
+  req.session = req.user;
+  next();
+}, cashboxModule);
 
 // ============================================
 // API ROUTES

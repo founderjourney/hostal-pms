@@ -2,9 +2,9 @@
 
 ## ✅ SISTEMA EN PRODUCCIÓN - FASE 1 COMPLETADA
 
-**Versión:** 1.11.0
-**Estado:** Day 11 Completed - System Optimized & Secured ✅
-**Última actualización:** 2025-11-23
+**Versión:** 1.12.0
+**Estado:** Day 12 Completed - Staff, Tasks & Cashbox Modules ✅
+**Última actualización:** 2025-11-27
 
 ### **🌐 URL DE PRODUCCIÓN:**
 **https://hostal-pms.vercel.app**
@@ -33,6 +33,44 @@
 | **📱 Mobile App** | ✅ PWA Ready | 100% | ALTA |
 
 **Progreso General:** 100% del sistema base + Monitoreo + PWA
+
+---
+
+## 🆕 NOVEDADES - DÍA 12 (2025-11-27) ✅
+
+### 👥 Staff Management Module - NUEVO
+- **7 Roles de hostal:** manager, administrativo, recepcionista_pago, recepcionista_voluntario, aseo, mantenimiento, voluntario
+- **Control de asistencia:** Clock-in/Clock-out con historial
+- **Estadisticas:** Personal activo, en turno, horas trabajadas
+- **11 Endpoints API** completos
+- **Frontend:** `staff.html` con dashboard y gestion completa
+
+### 📋 Tasks/Maintenance Module - NUEVO
+- **6 Tipos de tarea:** cleaning, maintenance, check_preparation, inspection, restock, other
+- **4 Prioridades:** urgent, high, normal, low
+- **Tablero Kanban:** Pendientes, En Progreso, Completadas
+- **Asignacion a staff** con seguimiento
+- **10 Endpoints API** completos
+- **Frontend:** `tasks.html` con interfaz Kanban
+
+### 💰 Cashbox/Finance Module - NUEVO
+- **Sesiones de caja:** Apertura/cierre con control de montos
+- **6 Categorias de ingreso:** reservation_payment, walk_in, extra_service, etc.
+- **8 Categorias de egreso:** supplies, maintenance, utilities, payroll, etc.
+- **4 Metodos de pago:** cash, card, transfer, other
+- **Reportes diarios/mensuales** automaticos
+- **12 Endpoints API** completos
+- **Frontend:** `cashbox.html` con gestion de caja
+
+### 📚 Documentacion API
+- `docs/05-api/STAFF-API.md` - Staff Management
+- `docs/05-api/TASKS-API.md` - Tasks/Maintenance
+- `docs/05-api/CASHBOX-API.md` - Cashbox/Finance
+
+### 🗄️ Migraciones Neon
+- `database/migrations/002-staff-roles.sql`
+- `database/migrations/003-tasks.sql`
+- `database/migrations/004-cashbox.sql`
 
 ---
 
@@ -99,21 +137,21 @@
 
 **Módulos Adicionales:**
 ```
-✅ products          - Inventario POS
-✅ sale_items        - Items de ventas
-✅ staff             - Personal del hostal
-✅ attendance        - Asistencia de staff
-✅ tasks             - Tareas asignadas
-✅ cashbox_shifts    - Turnos de caja
-✅ cashbox_movements - Movimientos de caja
-✅ tours             - Tours/Paseos
-✅ tour_clicks       - Tracking de clicks
-✅ tour_commissions  - Comisiones
-✅ reviews           - Reviews de tours
-✅ guest_groups      - Grupos de huéspedes
-✅ guest_group_members - Miembros de grupos
-✅ bed_blocks        - Bloqueos de camas
-✅ activity_log      - Log de actividades
+✅ products              - Inventario POS
+✅ sale_items            - Items de ventas
+✅ staff                 - Personal (7 roles de hostal) ⭐ MEJORADO
+✅ attendance            - Control de asistencia (clock-in/out)
+✅ tasks                 - Tareas y mantenimiento ⭐ NUEVO
+✅ cashbox_sessions      - Sesiones de caja ⭐ NUEVO
+✅ cashbox_transactions  - Movimientos de caja ⭐ NUEVO
+✅ tours                 - Tours/Paseos
+✅ tour_clicks           - Tracking de clicks
+✅ tour_commissions      - Comisiones
+✅ reviews               - Reviews de tours
+✅ guest_groups          - Grupos de huéspedes
+✅ guest_group_members   - Miembros de grupos
+✅ bed_blocks            - Bloqueos de camas
+✅ activity_log          - Log de actividades
 ```
 
 ---
@@ -163,11 +201,27 @@
 - Múltiples métodos de pago
 - Stock bajo con alertas
 
-### 👨‍💼 Gestión de Personal
-- Administración de empleados
+### 👨‍💼 Gestión de Personal ⭐ MEJORADO
+- **7 Roles especificos:** manager, administrativo, recepcionista_pago, recepcionista_voluntario, aseo, mantenimiento, voluntario
+- Clock-in/Clock-out con historial
+- Estadisticas de asistencia
 - Posiciones y salarios
 - Contactos de emergencia
 - Estados activo/inactivo
+
+### 📋 Tareas y Mantenimiento ⭐ NUEVO
+- Tablero Kanban (Pendientes, En Progreso, Completadas)
+- 6 tipos de tarea (limpieza, mantenimiento, inspeccion, etc.)
+- 4 niveles de prioridad
+- Asignacion a personal
+- Seguimiento de completacion
+
+### 💰 Gestion de Caja ⭐ NUEVO
+- Apertura/cierre de sesiones de caja
+- Registro de ingresos y egresos
+- Multiples categorias y metodos de pago
+- Reportes diarios y mensuales
+- Control de diferencias
 
 ### 🚶 Tours
 - Catálogo de tours
