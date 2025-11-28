@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "functions": {
-    "server/server-simple.js": {
-      "maxDuration": 30,
-      "memory": 1024
+  "builds": [
+    {
+      "src": "server/server-simple.js",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/ping",
