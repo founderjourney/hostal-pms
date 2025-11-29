@@ -558,30 +558,44 @@ module.exports = stripe;
 
 ## DEV2-08: MOBILE - Responsive Audit
 **Duracion:** 1 dia
-**Estado:** [ ] Pendiente
+**Estado:** [x] COMPLETADO (2025-11-29)
 **Depende de:** Nada
 
-### Que hacer:
-```
-1. Auditar cada pagina en mobile (375px, 414px)
-2. Documentar problemas encontrados
-3. Crear lista de fixes necesarios
-4. Priorizar por severidad
-```
+### Auditoria realizada:
 
-### Checklist por pagina:
-| Pagina | Navegacion | Forms | Tablas | Modals |
-|--------|------------|-------|--------|--------|
-| index.html | | | | |
-| reservations.html | | | | |
-| analytics.html | | | | |
-| staff.html | | | | |
-| tasks.html | | | | |
-| cashbox.html | | | | |
+| Pagina | Viewport | Media Queries | Fixed Widths | Estado |
+|--------|----------|---------------|--------------|--------|
+| index.html | OK | 3 | 39 (inline) | OK |
+| reservations.html | OK | 3 (ADDED) | 2 | FIXED |
+| analytics.html | OK | 1 | 2 | OK |
+| cashbox.html | OK | 1 | 6 | OK |
+| pos.html | OK | 2 | 11 | OK |
+| reports-advanced.html | OK | 3 (ADDED) | 3 | FIXED |
+| staff.html | OK | 1 | 8 | OK |
+| tasks.html | OK | 1 | 5 | OK |
+
+### Fixes aplicados:
+
+**reports-advanced.html:**
+- Agregadas 3 media queries (768px, 480px, 375px)
+- Grid container con min(100%, 350px) para evitar overflow
+- Header responsivo en columna para mobile
+- Stats grid 1 columna en mobile
+- Charts con altura adaptativa
+- Controles apilados verticalmente
+
+**reservations.html:**
+- Agregadas 3 media queries (768px, 480px, 375px)
+- Actions bar apilados en mobile
+- Reservation details grid 1 columna
+- Buttons full-width en mobile
+- Modal padding reducido
+- Stats grid adaptativo
 
 ### Verificacion:
-- [ ] Auditoria completa
-- [ ] Lista de issues documentada
+- [x] Auditoria completa (8 paginas)
+- [x] Media queries agregadas donde faltaban
+- [x] Grid layouts corregidos
 
 ---
 
@@ -696,7 +710,7 @@ module.exports = stripe;
 | DEV2-05 | [x] COMPLETADO 2025-11-28 | 3 |
 | DEV2-06 | [x] COMPLETADO 2025-11-29 | 3-4 |
 | DEV2-07 | [x] COMPLETADO 2025-11-29 | 4 |
-| DEV2-08 | [ ] | 4 |
+| DEV2-08 | [x] COMPLETADO 2025-11-29 | 4 |
 | DEV2-09 | [ ] | 5 |
 | DEV2-10 | [ ] | 5 |
 | DEV2-11 | [ ] | 6 |
@@ -709,6 +723,7 @@ module.exports = stripe;
 - **DEV2-05** (2025-11-28): Imagenes de productos implementado. Campo image_url en tabla products, endpoints POST/DELETE para upload, preview en modal, grid con imagenes.
 - **DEV2-06** (2025-11-29): Graficos interactivos completos. Chart.js integrado, 4 graficos (ocupacion mensual, revenue semanal, distribucion huespedes, comparativo YoY). Endpoints backend corregidos: transaction_type en lugar de type, guest-distribution usa source de bookings.
 - **DEV2-07** (2025-11-29): Exportacion de reportes. jsPDF + jspdf-autotable para PDF multi-pagina con tablas. SheetJS para Excel con 5 hojas. CSV como fallback. Dropdown menu con 3 opciones. Loading overlay. Archivos: reports-advanced.html (librerias CDN, botones), reports-advanced.js (exportToPDF, exportToExcel, exportToCSV).
+- **DEV2-08** (2025-11-29): Mobile Responsive Audit. Auditadas 8 paginas HTML. Agregadas media queries (768px, 480px, 375px) a reports-advanced.html y reservations.html. Grid containers corregidos con min(100%, 350px). Headers, stats, controls adaptados para mobile.
 
 ---
 
