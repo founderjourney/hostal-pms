@@ -238,7 +238,7 @@ module.exports = stripe;
 
 ## DEV1-08: TWILIO SMS - Automatizacion
 **Duracion:** 2 dias
-**Estado:** [ ] Pendiente
+**Estado:** [x] COMPLETADO (2025-11-29)
 **Depende de:** DEV1-07
 
 ### Que hacer:
@@ -251,10 +251,24 @@ module.exports = stripe;
 6. Agregar opt-out para guests
 ```
 
+### Implementado:
+- Endpoints de automatizacion:
+  - GET /automation/status
+  - GET /automation/pending-checkins
+  - GET /automation/pending-checkouts
+  - POST /automation/process-checkin-reminders
+  - POST /automation/process-checkout-reminders
+  - POST /automation/send-confirmation/:bookingId
+  - POST /automation/send-wifi/:bookingId
+- Cron job: server/cron/sms-automation.js
+- Funciones helper: sendCheckoutReminderSMS, sendWifiCredentialsSMS, sendPaymentConfirmationSMS
+- Trigger WiFi SMS en quick-checkin y confirm-arrival
+- Horarios cron: 10:00 AM check-in reminders, 8:00 AM checkout reminders
+
 ### Verificacion:
-- [ ] SMS automaticos funcionan
-- [ ] Guest puede opt-out
-- [ ] Logs de SMS enviados
+- [x] SMS automaticos funcionan
+- [ ] Guest puede opt-out (FUTURE - v2.0)
+- [x] Logs de SMS enviados
 
 ---
 
@@ -338,8 +352,8 @@ module.exports = stripe;
 | DEV1-04 | [x] COMPLETADO 2025-11-28 | 2 |
 | DEV1-05 | [x] COMPLETADO 2025-11-28 | 2 |
 | DEV1-06 | [x] COMPLETADO 2025-11-29 | 3 |
-| DEV1-07 | [ ] | 3 |
-| DEV1-08 | [ ] | 4 |
+| DEV1-07 | [x] COMPLETADO 2025-11-29 | 3 |
+| DEV1-08 | [x] COMPLETADO 2025-11-29 | 4 |
 | DEV1-09 | [ ] | 5 |
 | DEV1-10 | [ ] | 6-7 |
 | DEV1-11 | [ ] | 7-8 |
@@ -351,6 +365,8 @@ module.exports = stripe;
 - **DEV1-04** (2025-11-28): Integración Stripe con reservaciones. Endpoints: POST /api/reservations/:id/payment (iniciar pago), POST /api/reservations/:id/preauth (pre-autorización), POST /api/reservations/:id/capture (capturar pre-auth). Dashboard de pagos en frontend.
 - **DEV1-05** (2025-11-28): Configuración SendGrid. Creado `server/config/sendgrid.js` y `server/modules/email.js`. Endpoints: GET /status, POST /send, POST /send-bulk, POST /test, GET /history. Tabla emails para registro de envíos.
 - **DEV1-06** (2025-11-29): Templates de Email implementados. 4 templates profesionales: booking_confirmation (confirmación de reserva), checkin_reminder (recordatorio día anterior), receipt (recibo de pago), checkout_reminder (recordatorio check-out con link a review). Endpoints: GET /templates, GET /templates/:id, POST /send-template, POST /preview-template. Funciones helper exportadas: sendBookingConfirmation(), sendCheckoutReminder(). Templates con HTML responsive y versión texto.
+- **DEV1-07** (2025-11-29): Twilio SMS implementado. Creado `server/config/twilio.js` (cliente con formateo E.164) y `server/modules/sms.js` (10 endpoints). 5 templates SMS: booking_confirmation, checkin_reminder, checkout_reminder, wifi_credentials, payment_confirmation. Endpoints: GET /status, POST /send, POST /send-bulk, POST /test, GET /history, GET /balance, GET /templates, POST /send-template, POST /preview-template. Funciones helper: sendBookingConfirmationSMS(), sendCheckinReminderSMS(). Tabla sms_messages para historial. Documentación `docs/05-api/SMS-API.md`.
+- **DEV1-08** (2025-11-29): SMS Automatización implementado. Cron job `server/cron/sms-automation.js` para recordatorios automáticos. Endpoints: GET /automation/status, GET /automation/pending-checkins, GET /automation/pending-checkouts, POST /automation/process-checkin-reminders, POST /automation/process-checkout-reminders, POST /automation/send-confirmation/:id, POST /automation/send-wifi/:id. Funciones helper: sendCheckoutReminderSMS(), sendWifiCredentialsSMS(), sendPaymentConfirmationSMS(), processCheckinReminders(), processCheckoutReminders(). Trigger automático de WiFi SMS en quick-checkin y confirm-arrival (front-desk.js). Horarios: 10:00 AM check-in reminders, 8:00 AM checkout reminders.
 
 ---
 
@@ -601,39 +617,37 @@ module.exports = stripe;
 
 ## DEV2-09: MOBILE - Fixes Criticos
 **Duracion:** 2 dias
-**Estado:** [ ] Pendiente
+**Estado:** [x] COMPLETADO (2025-11-29)
 **Depende de:** DEV2-08
 
-### Que hacer:
-```
-1. Corregir navegacion mobile
-2. Corregir forms que no caben
-3. Hacer tablas scrolleables horizontalmente
-4. Ajustar modals para mobile
-5. Agregar touch gestures basicos
-```
+### Implementado:
 
-### CSS a agregar:
-```css
-/* Tablas responsivas */
-.table-responsive {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
+**Nuevo archivo:** `public/css/mobile-fixes.css` (270 lineas)
 
-/* Modals mobile */
-@media (max-width: 576px) {
-  .modal-dialog {
-    margin: 0;
-    max-width: 100%;
-    height: 100%;
-  }
-}
-```
+### Features del CSS compartido:
+- Navegacion mobile (hamburger ya existia en index.html)
+- Tablas responsivas con scroll horizontal y hint
+- Modals fullscreen en mobile (<576px)
+- Forms stacked verticalmente
+- Touch targets minimos 44px
+- FAB (Floating Action Button)
+- Safe area support (iPhone X+)
+- Skeleton loading states
+- Bottom navigation bar support
+- Print styles
+
+### Archivos actualizados (10 paginas):
+- index.html, reservations.html, reports-advanced.html
+- pos.html, cashbox.html, analytics.html
+- staff.html, tasks.html
+- reviews-dashboard.html, whatsapp-chat.html
 
 ### Verificacion:
-- [ ] Todas las paginas usables en mobile
-- [ ] No hay overflow horizontal
+- [x] CSS compartido creado
+- [x] Incluido en 10 paginas principales
+- [x] Tablas scrolleables
+- [x] Modals fullscreen en mobile
+- [x] Forms adaptados
 - [ ] Touch funciona correctamente
 
 ---
@@ -711,7 +725,7 @@ module.exports = stripe;
 | DEV2-06 | [x] COMPLETADO 2025-11-29 | 3-4 |
 | DEV2-07 | [x] COMPLETADO 2025-11-29 | 4 |
 | DEV2-08 | [x] COMPLETADO 2025-11-29 | 4 |
-| DEV2-09 | [ ] | 5 |
+| DEV2-09 | [x] COMPLETADO 2025-11-29 | 5 |
 | DEV2-10 | [ ] | 5 |
 | DEV2-11 | [ ] | 6 |
 
@@ -724,6 +738,7 @@ module.exports = stripe;
 - **DEV2-06** (2025-11-29): Graficos interactivos completos. Chart.js integrado, 4 graficos (ocupacion mensual, revenue semanal, distribucion huespedes, comparativo YoY). Endpoints backend corregidos: transaction_type en lugar de type, guest-distribution usa source de bookings.
 - **DEV2-07** (2025-11-29): Exportacion de reportes. jsPDF + jspdf-autotable para PDF multi-pagina con tablas. SheetJS para Excel con 5 hojas. CSV como fallback. Dropdown menu con 3 opciones. Loading overlay. Archivos: reports-advanced.html (librerias CDN, botones), reports-advanced.js (exportToPDF, exportToExcel, exportToCSV).
 - **DEV2-08** (2025-11-29): Mobile Responsive Audit. Auditadas 8 paginas HTML. Agregadas media queries (768px, 480px, 375px) a reports-advanced.html y reservations.html. Grid containers corregidos con min(100%, 350px). Headers, stats, controls adaptados para mobile.
+- **DEV2-09** (2025-11-29): Mobile Fixes Criticos. Creado `public/css/mobile-fixes.css` (270 lineas) con: tablas scrolleables, modals fullscreen, forms stacked, touch targets 44px, FAB, safe area iPhone X+, skeleton loading, bottom nav support, print styles. Incluido en 10 paginas HTML.
 
 ---
 

@@ -10,11 +10,29 @@
     <script src="js/analytics.js"></script>
     <script src="js/feedback.js"></script> <!-- Day 8: Feedback Module -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Mobile Fixes CSS - DEV2-09 -->
+    <link href="/css/mobile-fixes.css" rel="stylesheet">
+    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#3498db">
+
+    <!-- iOS PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <meta name="apple-mobile-web-app-title" content="Almanik PMS">
+
+    <!-- iOS Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png">
+
+    <!-- iOS Splash Screens -->
+    <link rel="apple-touch-startup-image" href="/icons/splash-iphone.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="/icons/splash-iphone-plus.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="/icons/splash-iphone-x.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="/icons/splash-ipad.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="/icons/splash-ipad-pro.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)">
     <style>
         * {
             margin: 0;
@@ -1126,6 +1144,18 @@
                 <i class="fas fa-map-marked-alt"></i>Paseos
             </button>
 
+            <button class="nav-button" onclick="window.location.href='/reviews-dashboard.html'">
+                <i class="fas fa-star"></i>Reviews
+            </button>
+
+            <button class="nav-button" onclick="window.location.href='/whatsapp-chat.html'">
+                <i class="fab fa-whatsapp"></i>WhatsApp
+            </button>
+
+            <button class="nav-button" onclick="window.location.href='/executive-dashboard.html'">
+                <i class="fas fa-chart-pie"></i>Ejecutivo
+            </button>
+
             <button class="nav-button" onclick="showView('users')" id="users-nav" style="display: none;">
                 <i class="fas fa-user-cog"></i>Usuarios
             </button>
@@ -1222,6 +1252,491 @@
                         </div>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: 85%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================ -->
+                <!-- FRONT DESK PANEL - ACCIONES RÁPIDAS 2AM -->
+                <!-- ============================================ -->
+                <div id="front-desk-panel" class="front-desk-panel" style="margin-bottom: 30px;">
+                    <!-- Header con disponibilidad -->
+                    <div class="fd-header" style="background: linear-gradient(135deg, #2c3e50, #34495e); border-radius: 15px 15px 0 0; padding: 20px; color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="font-size: 48px; font-weight: 700;" id="fd-available-count">-</div>
+                            <div>
+                                <div style="font-size: 18px; font-weight: 600;">CAMAS DISPONIBLES</div>
+                                <div style="opacity: 0.8;" id="fd-min-price">Desde $-/noche</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="fd-search" placeholder="🔍 Buscar reserva, huésped o documento..."
+                                   style="padding: 12px 20px; border: none; border-radius: 25px; width: 300px; font-size: 14px; background: rgba(255,255,255,0.9);">
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción rápida -->
+                    <div class="fd-actions" style="background: white; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; border-left: 1px solid #eee; border-right: 1px solid #eee;">
+                        <button onclick="openQuickCheckinModal()" class="fd-action-btn fd-checkin" style="padding: 25px 20px; border: none; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; font-size: 16px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 15px rgba(39,174,96,0.3);">
+                            <i class="fas fa-user-plus" style="font-size: 28px;"></i>
+                            CHECK-IN RÁPIDO
+                        </button>
+                        <button onclick="openQuickPaymentModal()" class="fd-action-btn fd-payment" style="padding: 25px 20px; border: none; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; background: linear-gradient(135deg, #3498db, #2980b9); color: white; font-size: 16px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 15px rgba(52,152,219,0.3);">
+                            <i class="fas fa-dollar-sign" style="font-size: 28px;"></i>
+                            COBRAR PAGO
+                        </button>
+                        <button onclick="openQuickCheckoutModal()" class="fd-action-btn fd-checkout" style="padding: 25px 20px; border: none; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; font-size: 16px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 15px rgba(231,76,60,0.3);">
+                            <i class="fas fa-sign-out-alt" style="font-size: 28px;"></i>
+                            CHECK-OUT
+                        </button>
+                        <button onclick="refreshFrontDeskStatus()" class="fd-action-btn fd-refresh" style="padding: 25px 20px; border: none; border-radius: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; font-size: 16px; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 15px rgba(155,89,182,0.3);">
+                            <i class="fas fa-sync-alt" style="font-size: 28px;"></i>
+                            ACTUALIZAR
+                        </button>
+                    </div>
+
+                    <!-- Alertas y llegadas pendientes -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #eee; border-top: none; border-radius: 0 0 15px 15px; overflow: hidden;">
+                        <!-- Llegadas pendientes -->
+                        <div id="fd-pending-arrivals" style="background: #f8f9fa; padding: 15px; border-right: 1px solid #eee;">
+                            <h4 style="margin: 0 0 10px 0; color: #2c3e50; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-plane-arrival" style="color: #27ae60;"></i>
+                                Llegadas Pendientes
+                                <span id="fd-arrivals-count" style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">0</span>
+                            </h4>
+                            <div id="fd-arrivals-list" style="max-height: 150px; overflow-y: auto;">
+                                <p style="color: #7f8c8d; font-size: 14px;">Cargando...</p>
+                            </div>
+                        </div>
+                        <!-- Alertas -->
+                        <div id="fd-alerts" style="background: #fff5f5; padding: 15px;">
+                            <h4 style="margin: 0 0 10px 0; color: #2c3e50; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>
+                                Alertas
+                                <span id="fd-alerts-count" style="background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">0</span>
+                            </h4>
+                            <div id="fd-alerts-list" style="max-height: 150px; overflow-y: auto;">
+                                <p style="color: #7f8c8d; font-size: 14px;">Sin alertas</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ESTILOS RESPONSIVOS PARA MODALES -->
+                <style>
+                    .fd-modal-overlay {
+                        display: none;
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(0,0,0,0.7);
+                        z-index: 9999;
+                        overflow-y: auto;
+                        padding: 20px;
+                        box-sizing: border-box;
+                    }
+                    .fd-modal-overlay.active {
+                        display: flex;
+                        align-items: flex-start;
+                        justify-content: center;
+                    }
+                    .fd-modal {
+                        background: white;
+                        border-radius: 16px;
+                        width: 100%;
+                        max-width: 480px;
+                        margin: auto;
+                        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                        animation: modalSlideIn 0.3s ease;
+                    }
+                    @keyframes modalSlideIn {
+                        from { opacity: 0; transform: translateY(-20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    .fd-modal-header {
+                        padding: 16px 20px;
+                        border-radius: 16px 16px 0 0;
+                        color: white;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        position: sticky;
+                        top: 0;
+                        z-index: 10;
+                    }
+                    .fd-modal-header h2 {
+                        margin: 0;
+                        font-size: 18px;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
+                    .fd-modal-close {
+                        background: rgba(255,255,255,0.2);
+                        border: none;
+                        color: white;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        font-size: 20px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: background 0.2s;
+                    }
+                    .fd-modal-close:hover {
+                        background: rgba(255,255,255,0.3);
+                    }
+                    .fd-modal-body {
+                        padding: 20px;
+                    }
+                    .fd-form-group {
+                        margin-bottom: 16px;
+                    }
+                    .fd-form-group label {
+                        display: block;
+                        margin-bottom: 6px;
+                        font-weight: 600;
+                        color: #2c3e50;
+                        font-size: 14px;
+                    }
+                    .fd-input {
+                        width: 100%;
+                        padding: 12px;
+                        border: 2px solid #e0e0e0;
+                        border-radius: 10px;
+                        font-size: 16px;
+                        transition: border-color 0.2s;
+                        box-sizing: border-box;
+                    }
+                    .fd-input:focus {
+                        outline: none;
+                        border-color: #3498db;
+                    }
+                    .fd-row {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 12px;
+                    }
+                    @media (max-width: 480px) {
+                        .fd-row {
+                            grid-template-columns: 1fr;
+                        }
+                        .fd-modal {
+                            margin: 10px;
+                            border-radius: 12px;
+                        }
+                        .fd-modal-header {
+                            border-radius: 12px 12px 0 0;
+                            padding: 14px 16px;
+                        }
+                        .fd-modal-body {
+                            padding: 16px;
+                        }
+                    }
+                    .fd-divider {
+                        border: none;
+                        border-top: 1px solid #eee;
+                        margin: 16px 0;
+                    }
+                    .fd-total-box {
+                        background: linear-gradient(135deg, #f8f9fa, #ecf0f1);
+                        padding: 16px;
+                        border-radius: 12px;
+                        margin-bottom: 16px;
+                    }
+                    .fd-total-row {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+                    .fd-total-amount {
+                        font-size: 24px;
+                        font-weight: 700;
+                        color: #27ae60;
+                    }
+                    .fd-payment-options {
+                        display: flex;
+                        gap: 8px;
+                        flex-wrap: wrap;
+                    }
+                    .fd-payment-option {
+                        flex: 1;
+                        min-width: 90px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+                        padding: 10px 12px;
+                        background: white;
+                        border: 2px solid #e0e0e0;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        transition: all 0.2s;
+                    }
+                    .fd-payment-option:has(input:checked) {
+                        border-color: #3498db;
+                        background: #ebf5fb;
+                    }
+                    .fd-payment-option input {
+                        display: none;
+                    }
+                    .fd-submit-btn {
+                        width: 100%;
+                        padding: 16px;
+                        border: none;
+                        border-radius: 10px;
+                        font-size: 16px;
+                        font-weight: 700;
+                        color: white;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                        transition: transform 0.2s, box-shadow 0.2s;
+                    }
+                    .fd-submit-btn:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    }
+                    .fd-submit-btn:active {
+                        transform: translateY(0);
+                    }
+                    .fd-submit-btn.green { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+                    .fd-submit-btn.blue { background: linear-gradient(135deg, #3498db, #2980b9); }
+                    .fd-submit-btn.red { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+                    .fd-info-box {
+                        background: #f8f9fa;
+                        padding: 12px;
+                        border-radius: 10px;
+                        margin-bottom: 16px;
+                    }
+                </style>
+
+                <!-- MODAL: CHECK-IN RÁPIDO -->
+                <div id="quick-checkin-modal" class="fd-modal-overlay">
+                    <div class="fd-modal">
+                        <div class="fd-modal-header" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+                            <h2><i class="fas fa-user-plus"></i> Check-in Rápido</h2>
+                            <button class="fd-modal-close" onclick="closeQuickCheckinModal()">&times;</button>
+                        </div>
+                        <form id="quick-checkin-form" class="fd-modal-body">
+                            <!-- Indicador de estado del huésped -->
+                            <div id="qc-guest-status" style="display: none; padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <i id="qc-status-icon" class="fas fa-user"></i>
+                                    <span id="qc-status-text">-</span>
+                                </div>
+                                <div id="qc-guest-history" style="font-size: 12px; margin-top: 4px; opacity: 0.8;"></div>
+                            </div>
+
+                            <div class="fd-form-group">
+                                <label>Documento de identidad * <small style="font-weight: normal; color: #7f8c8d;">(busca automáticamente)</small></label>
+                                <input type="text" id="qc-guest-document" class="fd-input" required placeholder="1052384756" autocomplete="off">
+                            </div>
+                            <div class="fd-form-group">
+                                <label>Nombre completo *</label>
+                                <input type="text" id="qc-guest-name" class="fd-input" required placeholder="Juan García" autocomplete="off">
+                            </div>
+                            <div class="fd-row">
+                                <div class="fd-form-group">
+                                    <label>Teléfono</label>
+                                    <input type="tel" id="qc-guest-phone" class="fd-input" placeholder="+57 300 123 4567">
+                                </div>
+                                <div class="fd-form-group">
+                                    <label>Nacionalidad</label>
+                                    <input type="text" id="qc-guest-nationality" class="fd-input" value="Colombia">
+                                </div>
+                            </div>
+
+                            <hr class="fd-divider">
+
+                            <div class="fd-form-group">
+                                <label>Seleccionar cama *</label>
+                                <select id="qc-bed-select" class="fd-input" required>
+                                    <option value="">Cargando camas...</option>
+                                </select>
+                            </div>
+                            <div class="fd-row">
+                                <div class="fd-form-group">
+                                    <label>Noches</label>
+                                    <input type="number" id="qc-nights" class="fd-input" value="1" min="1" max="30" onchange="updateQuickCheckinTotal()">
+                                </div>
+                                <div class="fd-form-group">
+                                    <label>Check-out</label>
+                                    <input type="date" id="qc-checkout-date" class="fd-input" readonly style="background: #f5f5f5;">
+                                </div>
+                            </div>
+
+                            <hr class="fd-divider">
+
+                            <div class="fd-total-box">
+                                <div class="fd-total-row" style="margin-bottom: 12px;">
+                                    <span style="font-size: 16px; color: #2c3e50;">TOTAL:</span>
+                                    <span id="qc-total" class="fd-total-amount">$0</span>
+                                </div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #2c3e50;">Método de pago</label>
+                                <div class="fd-payment-options">
+                                    <label class="fd-payment-option">
+                                        <input type="radio" name="qc-payment" value="cash" checked>
+                                        <i class="fas fa-money-bill-wave" style="color: #27ae60;"></i> Efectivo
+                                    </label>
+                                    <label class="fd-payment-option">
+                                        <input type="radio" name="qc-payment" value="card">
+                                        <i class="fas fa-credit-card" style="color: #3498db;"></i> Tarjeta
+                                    </label>
+                                    <label class="fd-payment-option">
+                                        <input type="radio" name="qc-payment" value="pending">
+                                        <i class="fas fa-clock" style="color: #f39c12;"></i> Pendiente
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="qc-submit-btn" class="fd-submit-btn green">
+                                <i class="fas fa-check-circle"></i> CONFIRMAR CHECK-IN
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- MODAL: COBRAR PAGO -->
+                <div id="quick-payment-modal" class="fd-modal-overlay">
+                    <div class="fd-modal">
+                        <div class="fd-modal-header" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                            <h2><i class="fas fa-dollar-sign"></i> Cobrar Pago</h2>
+                            <button class="fd-modal-close" onclick="closeQuickPaymentModal()">&times;</button>
+                        </div>
+                        <form id="quick-payment-form" class="fd-modal-body">
+                            <div class="fd-form-group">
+                                <label>Seleccionar huésped</label>
+                                <select id="qp-bed-select" class="fd-input" onchange="loadGuestAccountForPayment()">
+                                    <option value="">Seleccionar cama...</option>
+                                </select>
+                            </div>
+                            <div id="qp-guest-info" class="fd-info-box" style="display: none;">
+                                <div style="font-weight: 600;" id="qp-guest-name">-</div>
+                                <div style="color: #e74c3c; font-size: 14px; margin-top: 4px;" id="qp-guest-balance">Saldo: $-</div>
+                            </div>
+                            <div class="fd-form-group">
+                                <label>Monto a cobrar</label>
+                                <input type="number" id="qp-amount" class="fd-input" min="0" step="1000" placeholder="0" style="font-size: 24px; text-align: center; font-weight: 700;">
+                            </div>
+                            <div class="fd-form-group">
+                                <label>Método</label>
+                                <div class="fd-payment-options">
+                                    <label class="fd-payment-option">
+                                        <input type="radio" name="qp-method" value="cash" checked>
+                                        <i class="fas fa-money-bill-wave" style="color: #27ae60;"></i> Efectivo
+                                    </label>
+                                    <label class="fd-payment-option">
+                                        <input type="radio" name="qp-method" value="card">
+                                        <i class="fas fa-credit-card" style="color: #3498db;"></i> Tarjeta
+                                    </label>
+                                </div>
+                            </div>
+                            <button type="submit" class="fd-submit-btn blue">
+                                <i class="fas fa-check"></i> REGISTRAR PAGO
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- MODAL: CHECK-OUT RÁPIDO -->
+                <div id="quick-checkout-modal" class="fd-modal-overlay">
+                    <div class="fd-modal">
+                        <div class="fd-modal-header" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                            <h2><i class="fas fa-sign-out-alt"></i> Check-out</h2>
+                            <button class="fd-modal-close" onclick="closeQuickCheckoutModal()">&times;</button>
+                        </div>
+                        <form id="quick-checkout-form" class="fd-modal-body">
+                            <div class="fd-form-group">
+                                <label>Seleccionar cama ocupada</label>
+                                <select id="qco-bed-select" class="fd-input" onchange="loadGuestForCheckout()">
+                                    <option value="">Seleccionar...</option>
+                                </select>
+                            </div>
+                            <div id="qco-guest-info" class="fd-info-box" style="display: none;">
+                                <div style="font-weight: 600; margin-bottom: 8px;" id="qco-guest-name">-</div>
+                                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                                    <span>Total estadía:</span>
+                                    <span id="qco-total">$-</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                                    <span>Pagado:</span>
+                                    <span id="qco-paid">$-</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 16px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">
+                                    <span>Saldo pendiente:</span>
+                                    <span id="qco-balance" style="color: #e74c3c;">$-</span>
+                                </div>
+                            </div>
+                            <div id="qco-payment-section" style="display: none;">
+                                <div class="fd-form-group">
+                                    <label>Pago final</label>
+                                    <input type="number" id="qco-payment-amount" class="fd-input" min="0" step="1000" value="0">
+                                </div>
+                                <div class="fd-payment-options" style="margin-bottom: 16px;">
+                                    <label class="fd-payment-option">
+                                        <input type="radio" name="qco-method" value="cash" checked> Efectivo
+                                    </label>
+                                    <label class="fd-payment-option">
+                                        <input type="radio" name="qco-method" value="card"> Tarjeta
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="fd-form-group">
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: normal;">
+                                    <input type="checkbox" id="qco-mark-clean" style="width: 18px; height: 18px;">
+                                    Marcar cama como limpia
+                                </label>
+                            </div>
+                            <button type="submit" class="fd-submit-btn red">
+                                <i class="fas fa-check"></i> CONFIRMAR CHECK-OUT
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- PANEL OPERATIVO: CHECK-INS/CHECK-OUTS DEL DIA -->
+                <div id="operations-panel" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                    <!-- Check-outs Hoy -->
+                    <div style="background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(192, 57, 43, 0.1)); border-radius: 15px; padding: 20px; border: 1px solid rgba(231, 76, 60, 0.3);">
+                        <h3 style="color: #e74c3c; margin: 0 0 15px 0; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Check-outs Hoy
+                            <span id="checkout-count" style="background: #e74c3c; color: white; padding: 2px 8px; border-radius: 10px; font-size: 14px;">0</span>
+                        </h3>
+                        <div id="checkouts-list" style="max-height: 200px; overflow-y: auto;">
+                            <p style="color: #95a5a6; text-align: center;">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <!-- Check-ins Hoy -->
+                    <div style="background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(39, 174, 96, 0.1)); border-radius: 15px; padding: 20px; border: 1px solid rgba(46, 204, 113, 0.3);">
+                        <h3 style="color: #27ae60; margin: 0 0 15px 0; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Check-ins Esperados
+                            <span id="checkin-count" style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 10px; font-size: 14px;">0</span>
+                        </h3>
+                        <div id="checkins-list" style="max-height: 200px; overflow-y: auto;">
+                            <p style="color: #95a5a6; text-align: center;">Cargando...</p>
+                        </div>
+                    </div>
+
+                    <!-- Preview Mañana -->
+                    <div style="background: linear-gradient(135deg, rgba(241, 196, 15, 0.15), rgba(243, 156, 18, 0.1)); border-radius: 15px; padding: 20px; border: 1px solid rgba(241, 196, 15, 0.3);">
+                        <h3 style="color: #f39c12; margin: 0 0 15px 0; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-calendar-day"></i>
+                            Check-outs Mañana
+                            <span id="tomorrow-count" style="background: #f39c12; color: white; padding: 2px 8px; border-radius: 10px; font-size: 14px;">0</span>
+                        </h3>
+                        <div id="tomorrow-list" style="max-height: 200px; overflow-y: auto;">
+                            <p style="color: #95a5a6; text-align: center;">Cargando...</p>
                         </div>
                     </div>
                 </div>
@@ -1957,59 +2472,112 @@
         <div id="bed-modal"
             style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
             <div
-                style="background: linear-gradient(135deg, #2c3e50, #34495e); padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; position: relative;">
+                style="background: linear-gradient(135deg, #2c3e50, #34495e); padding: 30px; border-radius: 15px; width: 90%; max-width: 550px; position: relative; max-height: 90vh; overflow-y: auto;">
                 <button onclick="closeBedModal()"
-                    style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: #2c3e50; font-size: 24px; cursor: pointer;">×</button>
+                    style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: #ecf0f1; font-size: 24px; cursor: pointer;">×</button>
 
-                <h2 id="bed-modal-title" style="color: #2c3e50; margin-bottom: 20px;">Nueva Cama</h2>
+                <h2 id="bed-modal-title" style="color: #ecf0f1; margin-bottom: 20px;">Nueva Cama</h2>
+
+                <!-- Info del huésped actual (solo si está ocupada) -->
+                <div id="bed-guest-info" style="display: none; background: rgba(52,152,219,0.2); border: 1px solid #3498db; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                    <h4 style="color: #3498db; margin: 0 0 10px 0;">👤 Huésped Actual</h4>
+                    <p id="bed-guest-name" style="color: #ecf0f1; margin: 5px 0;"></p>
+                    <p id="bed-guest-doc" style="color: #bdc3c7; margin: 5px 0; font-size: 12px;"></p>
+                </div>
 
                 <form id="bed-form" style="display: grid; gap: 15px;">
-                    <div>
-                        <label style="color: #2c3e50; display: block; margin-bottom: 5px;">Nombre de la Cama:</label>
-                        <input type="text" id="bed-name" placeholder="Ej: 1-1, 2-3, Priv1-1"
-                            style="width: 100%; padding: 10px; border: none; border-radius: 5px;" required>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="color: #ecf0f1; display: block; margin-bottom: 5px;">Nombre:</label>
+                            <input type="text" id="bed-name" placeholder="Ej: 1-1"
+                                style="width: 100%; padding: 10px; border: none; border-radius: 5px; box-sizing: border-box;" required>
+                        </div>
+                        <div>
+                            <label style="color: #ecf0f1; display: block; margin-bottom: 5px;">Precio ($):</label>
+                            <input type="number" id="bed-price" placeholder="25.00" step="0.01" min="0"
+                                style="width: 100%; padding: 10px; border: none; border-radius: 5px; box-sizing: border-box;" required>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="color: #ecf0f1; display: block; margin-bottom: 5px;">Habitación:</label>
+                            <select id="bed-room" style="width: 100%; padding: 10px; border: none; border-radius: 5px; box-sizing: border-box;" required>
+                                <option value="">Seleccionar</option>
+                                <option value="Habitacion 1">Habitacion 1</option>
+                                <option value="Habitacion 2">Habitacion 2</option>
+                                <option value="Habitacion 3">Habitacion 3</option>
+                                <option value="Habitacion 4">Habitacion 4</option>
+                                <option value="Priv 1">Priv 1</option>
+                                <option value="Priv 2">Priv 2</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="color: #ecf0f1; display: block; margin-bottom: 5px;">Estado:</label>
+                            <select id="bed-status" style="width: 100%; padding: 10px; border: none; border-radius: 5px; box-sizing: border-box;">
+                                <option value="clean">Disponible</option>
+                                <option value="dirty">Por Limpiar</option>
+                                <option value="occupied">Ocupada</option>
+                                <option value="reserved">Reservada</option>
+                                <option value="maintenance">Mantenimiento</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div>
-                        <label style="color: #2c3e50; display: block; margin-bottom: 5px;">Habitación:</label>
-                        <select id="bed-room" style="width: 100%; padding: 10px; border: none; border-radius: 5px;"
-                            required>
-                            <option value="">Seleccionar habitación</option>
-                            <option value="Habitacion 1">Habitacion 1</option>
-                            <option value="Habitacion 2">Habitacion 2</option>
-                            <option value="Habitacion 3">Habitacion 3</option>
-                            <option value="Habitacion 4">Habitacion 4</option>
-                            <option value="Priv 1">Priv 1</option>
-                            <option value="Priv 2">Priv 2</option>
-                        </select>
+                        <label style="color: #ecf0f1; display: block; margin-bottom: 5px;">Notas:</label>
+                        <textarea id="bed-notes" placeholder="Observaciones sobre esta cama..."
+                            style="width: 100%; padding: 10px; border: none; border-radius: 5px; box-sizing: border-box; min-height: 60px; resize: vertical;"></textarea>
                     </div>
 
-                    <div>
-                        <label style="color: #2c3e50; display: block; margin-bottom: 5px;">Precio por Noche ($):</label>
-                        <input type="number" id="bed-price" placeholder="25.00" step="0.01" min="0"
-                            style="width: 100%; padding: 10px; border: none; border-radius: 5px;" required>
-                    </div>
-
-                    <div>
-                        <label style="color: #2c3e50; display: block; margin-bottom: 5px;">Estado:</label>
-                        <select id="bed-status" style="width: 100%; padding: 10px; border: none; border-radius: 5px;">
-                            <option value="clean">Disponible</option>
-                            <option value="dirty">Por Limpiar</option>
-                            <option value="occupied">Ocupada</option>
-                        </select>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
                         <button type="button" onclick="closeBedModal()"
-                            style="flex: 1; padding: 12px; background: #95a5a6; color: #2c3e50; border: none; border-radius: 5px; cursor: pointer;">
+                            style="flex: 1; padding: 12px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
                             Cancelar
                         </button>
                         <button type="submit"
-                            style="flex: 1; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            Guardar
+                            style="flex: 1; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                            💾 Guardar Cambios
+                        </button>
+                    </div>
+
+                    <!-- Botón eliminar (solo cuando se edita) -->
+                    <div id="bed-delete-section" style="display: none; margin-top: 10px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <button type="button" onclick="deleteBedFromModal()"
+                            style="width: 100%; padding: 12px; background: #c0392b; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                            🗑️ Eliminar Cama
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Modal para seleccionar huésped al hacer check-in -->
+        <div id="guest-selector-modal"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1100; align-items: center; justify-content: center;">
+            <div
+                style="background: linear-gradient(135deg, #2c3e50, #34495e); padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; position: relative; max-height: 80vh; overflow-y: auto;">
+                <button onclick="closeGuestSelectorModal()"
+                    style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: #ecf0f1; font-size: 24px; cursor: pointer;">×</button>
+
+                <h2 style="color: #ecf0f1; margin-bottom: 10px;">👤 Seleccionar Huésped</h2>
+                <p id="guest-selector-bed-info" style="color: #bdc3c7; margin-bottom: 20px; font-size: 14px;">Para la cama: <strong></strong></p>
+
+                <!-- Lista de huéspedes disponibles -->
+                <div id="guest-selector-list" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+                    <!-- Se llena dinámicamente -->
+                </div>
+
+                <!-- Botón para registrar nuevo huésped -->
+                <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px;">
+                    <button type="button" onclick="registerNewGuestAndReturn()"
+                        style="width: 100%; padding: 15px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px;">
+                        ➕ Registrar Nuevo Huésped
+                    </button>
+                    <p style="color: #95a5a6; font-size: 12px; text-align: center; margin-top: 10px;">
+                        Se abrirá el formulario de registro. Después podrás asignarlo a esta cama.
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -2292,6 +2860,7 @@
             let sessionId = localStorage.getItem('sessionId');
             let currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
             const API_BASE = '/api';
+            let bedsDataCache = {}; // Cache bed data for access in onclick handlers
 
             // Role-based permission system
             const ROLE_PERMISSIONS = {
@@ -2458,30 +3027,53 @@
                 loginBtn.textContent = 'INGRESAR AL SISTEMA';
             });
 
-            // API call helper
-            async function apiCall(endpoint) {
+            // API call helper - supports GET, POST, PUT, DELETE
+            async function apiCall(endpoint, method = 'GET', data = null) {
                 try {
-                    const response = await fetch(`${API_BASE}${endpoint}`, {
-                        headers: { 'session-id': sessionId }
-                    });
+                    const options = {
+                        method: method,
+                        headers: {
+                            'session-id': sessionId,
+                            'Content-Type': 'application/json'
+                        }
+                    };
+
+                    // Add body for non-GET requests
+                    if (data && method !== 'GET') {
+                        options.body = JSON.stringify(data);
+                    }
+
+                    const response = await fetch(`${API_BASE}${endpoint}`, options);
 
                     if (response.status === 401) {
                         logout();
                         return null;
                     }
 
-                    return response.json();
+                    // Handle empty responses
+                    const text = await response.text();
+                    if (!text) {
+                        return { success: response.ok };
+                    }
+
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.error('Invalid JSON response:', text);
+                        throw new Error('Respuesta inválida del servidor');
+                    }
                 } catch (err) {
                     console.error('API call failed:', err);
-                    return null;
+                    throw err;
                 }
             }
 
             // Load dashboard data
             async function loadDashboardData() {
-                const [bedsData, dashboardData] = await Promise.all([
+                const [bedsData, dashboardData, todayData] = await Promise.all([
                     apiCall('/beds'),
-                    apiCall('/dashboard')
+                    apiCall('/dashboard'),
+                    apiCall('/dashboard/today')
                 ]);
 
                 if (bedsData) {
@@ -2493,7 +3085,85 @@
                     updateRevenue(dashboardData);
                 }
 
+                // Cargar panel operativo
+                if (todayData) {
+                    renderOperationsPanel(todayData);
+                }
+
                 loadRecentActivity();
+            }
+
+            // Renderizar panel operativo
+            function renderOperationsPanel(data) {
+                // Check-outs hoy
+                const checkoutsList = document.getElementById('checkouts-list');
+                const checkoutCount = document.getElementById('checkout-count');
+                if (checkoutsList && data.checkouts_today) {
+                    checkoutCount.textContent = data.checkouts_today.length;
+                    if (data.checkouts_today.length === 0) {
+                        checkoutsList.innerHTML = '<p style="color: #95a5a6; text-align: center; padding: 20px;">No hay check-outs programados para hoy</p>';
+                    } else {
+                        checkoutsList.innerHTML = data.checkouts_today.map(co => `
+                            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong style="color: #ecf0f1;">👤 ${co.guest_name}</strong>
+                                        <p style="color: #95a5a6; margin: 3px 0 0 0; font-size: 12px;">🛏️ ${co.bed_name} (${co.room})</p>
+                                    </div>
+                                    ${co.amount_due > 0 ? `
+                                        <span style="background: #e74c3c; color: white; padding: 4px 8px; border-radius: 5px; font-size: 12px;">
+                                            Debe: $${co.amount_due}
+                                        </span>
+                                    ` : `
+                                        <span style="background: #27ae60; color: white; padding: 4px 8px; border-radius: 5px; font-size: 12px;">
+                                            PAGADO
+                                        </span>
+                                    `}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                // Check-ins esperados
+                const checkinsList = document.getElementById('checkins-list');
+                const checkinCount = document.getElementById('checkin-count');
+                if (checkinsList && data.checkins_today) {
+                    checkinCount.textContent = data.checkins_today.length;
+                    if (data.checkins_today.length === 0) {
+                        checkinsList.innerHTML = '<p style="color: #95a5a6; text-align: center; padding: 20px;">No hay check-ins esperados para hoy</p>';
+                    } else {
+                        checkinsList.innerHTML = data.checkins_today.map(ci => `
+                            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                                <div>
+                                    <strong style="color: #ecf0f1;">👤 ${ci.guest_name}</strong>
+                                    <p style="color: #95a5a6; margin: 3px 0 0 0; font-size: 12px;">
+                                        🛏️ ${ci.bed_name} | ${ci.nights} noches | $${ci.total}
+                                    </p>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+
+                // Check-outs mañana
+                const tomorrowList = document.getElementById('tomorrow-list');
+                const tomorrowCount = document.getElementById('tomorrow-count');
+                if (tomorrowList && data.checkouts_tomorrow) {
+                    tomorrowCount.textContent = data.checkouts_tomorrow.length;
+                    if (data.checkouts_tomorrow.length === 0) {
+                        tomorrowList.innerHTML = '<p style="color: #95a5a6; text-align: center; padding: 20px;">No hay check-outs programados para mañana</p>';
+                    } else {
+                        tomorrowList.innerHTML = data.checkouts_tomorrow.map(co => `
+                            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin-bottom: 8px;">
+                                <div>
+                                    <strong style="color: #ecf0f1;">👤 ${co.guest_name}</strong>
+                                    <p style="color: #95a5a6; margin: 3px 0 0 0; font-size: 12px;">🛏️ ${co.bed_name} (${co.room})</p>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
             }
 
             // Update bed statistics
@@ -2818,6 +3488,33 @@
                 const container = document.getElementById('rooms-container');
                 container.innerHTML = '';
 
+                // Cache all bed data for access in onclick handlers
+                bedsDataCache = {};
+                Object.values(bedsByRoom).forEach(beds => {
+                    beds.forEach(bed => {
+                        bedsDataCache[bed.id] = bed;
+                    });
+                });
+
+                // Helper para formatear fechas
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return '';
+                    const date = new Date(dateStr);
+                    const day = date.getDate();
+                    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                    return `${day} ${months[date.getMonth()]}`;
+                };
+
+                // Helper para verificar si checkout es hoy o mañana
+                const getCheckoutAlert = (checkOut) => {
+                    if (!checkOut) return '';
+                    const today = new Date().toISOString().split('T')[0];
+                    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    if (checkOut === today) return '<span style="background: #e74c3c; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px;">HOY</span>';
+                    if (checkOut === tomorrow) return '<span style="background: #f39c12; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px;">MAÑANA</span>';
+                    return '';
+                };
+
                 Object.keys(bedsByRoom).forEach(roomName => {
                     const beds = bedsByRoom[roomName];
                     const roomDiv = document.createElement('div');
@@ -2832,7 +3529,7 @@
                             ${beds.length} camas
                         </span>
                     </h2>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
                         ${beds.map(bed => `
                             <div style="
                                 background: ${getBedCardBackground(bed.status)};
@@ -2856,20 +3553,66 @@
                                     </button>
                                 </div>
 
-                                <div style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                                <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
                                     <p style="color: #2c3e50; margin: 5px 0; display: flex; align-items: center; gap: 8px;">
                                         <span style="font-size: 12px;">⚡</span>
                                         Estado: <strong style="color: ${getBedColor(bed.status)}; text-shadow: 0 0 5px ${getBedColor(bed.status)};">${getBedStatusText(bed.status)}</strong>
                                     </p>
-                                    <p style="color: #2c3e50; margin: 5px 0; display: flex; align-items: center; gap: 8px;">
-                                        <span style="font-size: 12px;">💰</span>
-                                        Precio: <strong style="color: #f1c40f;">$${bed.price}</strong>
-                                    </p>
-                                    ${bed.guest_name ? `<p style="color: #2c3e50; margin: 5px 0; display: flex; align-items: center; gap: 8px;"><span style="font-size: 12px;">👤</span>Huésped: <strong style="color: #3498db;">${bed.guest_name}</strong></p>` : ''}
-                                </div>
 
-                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                    ${getBedActions(bed)}
+                                    ${bed.status === 'occupied' && bed.guest_name ? `
+                                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
+                                            <p style="color: #2c3e50; margin: 5px 0; display: flex; align-items: center; gap: 8px;">
+                                                <span style="font-size: 12px;">👤</span>
+                                                <strong style="color: #3498db;">${bed.guest_name}</strong>
+                                            </p>
+                                            ${bed.check_in && bed.check_out ? `
+                                                <p style="color: #2c3e50; margin: 5px 0; display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                                    <span style="font-size: 12px;">📅</span>
+                                                    ${formatDate(bed.check_in)} → ${formatDate(bed.check_out)} ${getCheckoutAlert(bed.check_out)}
+                                                </p>
+                                            ` : ''}
+                                            ${bed.booking_total ? `
+                                                <div style="display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                                                    <span style="color: #95a5a6; font-size: 12px;">Total: $${bed.booking_total}</span>
+                                                    ${bed.amount_due > 0 ? `
+                                                        <span style="color: #e74c3c; font-size: 12px; font-weight: bold;">Debe: $${bed.amount_due}</span>
+                                                    ` : `
+                                                        <span style="color: #27ae60; font-size: 12px; font-weight: bold;">PAGADO</span>
+                                                    `}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    ` : ''}
+
+                                    ${bed.status === 'reserved' && bed.reserved_guest_name ? `
+                                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
+                                            <p style="color: #2c3e50; margin: 5px 0; display: flex; align-items: center; gap: 8px;">
+                                                <span style="font-size: 12px;">📅</span>
+                                                Reservada para: <strong style="color: #9b59b6;">${bed.reserved_guest_name}</strong>
+                                            </p>
+                                        </div>
+                                    ` : ''}
+
+                                    ${bed.status === 'clean' ? `
+                                        <p style="color: #27ae60; margin: 10px 0 5px 0; display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <span style="font-size: 12px;">✅</span>
+                                            Disponible | $${bed.price}/noche
+                                        </p>
+                                    ` : ''}
+
+                                    ${bed.status === 'dirty' ? `
+                                        <p style="color: #f39c12; margin: 10px 0 5px 0; display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <span style="font-size: 12px;">🧹</span>
+                                            Necesita limpieza
+                                        </p>
+                                    ` : ''}
+
+                                    ${bed.status === 'maintenance' ? `
+                                        <p style="color: #7f8c8d; margin: 10px 0 5px 0; display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                            <span style="font-size: 12px;">🔧</span>
+                                            En mantenimiento
+                                        </p>
+                                    ` : ''}
                                 </div>
                             </div>
                         `).join('')}
@@ -2905,6 +3648,8 @@
                     case 'clean': return '#27ae60';
                     case 'occupied': return '#e74c3c';
                     case 'dirty': return '#f39c12';
+                    case 'reserved': return '#9b59b6';
+                    case 'maintenance': return '#7f8c8d';
                     default: return '#95a5a6';
                 }
             }
@@ -2914,6 +3659,8 @@
                     case 'clean': return 'linear-gradient(135deg, rgba(39, 174, 96, 0.2), rgba(46, 204, 113, 0.1))';
                     case 'occupied': return 'linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.1))';
                     case 'dirty': return 'linear-gradient(135deg, rgba(243, 156, 18, 0.2), rgba(230, 126, 34, 0.1))';
+                    case 'reserved': return 'linear-gradient(135deg, rgba(155, 89, 182, 0.2), rgba(142, 68, 173, 0.1))';
+                    case 'maintenance': return 'linear-gradient(135deg, rgba(127, 140, 141, 0.2), rgba(149, 165, 166, 0.1))';
                     default: return 'linear-gradient(135deg, rgba(149, 165, 166, 0.2), rgba(127, 140, 141, 0.1))';
                 }
             }
@@ -2923,6 +3670,8 @@
                     case 'clean': return 'Disponible';
                     case 'occupied': return 'Ocupada';
                     case 'dirty': return 'Por Limpiar';
+                    case 'reserved': return 'Reservada';
+                    case 'maintenance': return 'Mantenimiento';
                     default: return 'Desconocido';
                 }
             }
@@ -2930,46 +3679,111 @@
             function getBedActions(bed) {
                 let actions = [];
 
-                const buttonBaseStyle = "padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-transform: uppercase; letter-spacing: 0.5px;";
+                const buttonBaseStyle = "padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-transform: uppercase; letter-spacing: 0.3px;";
+                const smallButtonStyle = "padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 10px; transition: all 0.3s ease;";
 
+                // Primary actions based on status
                 if (bed.status === 'clean') {
                     const selectedGuestId = localStorage.getItem('selectedGuestForCheckin');
                     actions.push(`
                     <button onclick="startCheckin(${bed.id}, ${selectedGuestId || 'null'})"
-                            style="${buttonBaseStyle} background: linear-gradient(135deg, #3498db, #2980b9); color: #2c3e50;"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(52, 152, 219, 0.4)'"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)'">
+                            style="${buttonBaseStyle} background: linear-gradient(135deg, #3498db, #2980b9); color: white;"
+                            title="Hacer Check-in">
                         🏨 Check-in
+                    </button>
+                    <button onclick="showReserveModal(${bed.id})"
+                            style="${buttonBaseStyle} background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white;"
+                            title="Reservar cama">
+                        📅 Reservar
                     </button>
                 `);
                 } else if (bed.status === 'dirty') {
                     actions.push(`
-                    <button onclick="markClean(${bed.id})"
-                            style="${buttonBaseStyle} background: linear-gradient(135deg, #27ae60, #229954); color: #2c3e50;"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(39, 174, 96, 0.4)'"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)'">
-                        ✨ Disponible
+                    <button onclick="markBedClean(${bed.id})"
+                            style="${buttonBaseStyle} background: linear-gradient(135deg, #27ae60, #229954); color: white;"
+                            title="Marcar como limpia">
+                        ✨ Limpia
                     </button>
                 `);
                 } else if (bed.status === 'occupied') {
                     actions.push(`
                     <button onclick="startCheckout(${bed.id})"
-                            style="${buttonBaseStyle} background: linear-gradient(135deg, #e74c3c, #c0392b); color: #2c3e50;"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(231, 76, 60, 0.4)'"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)'">
+                            style="${buttonBaseStyle} background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;"
+                            title="Hacer Check-out">
                         🚪 Check-out
+                    </button>
+                    <button onclick="showTransferModal(${bed.id})"
+                            style="${buttonBaseStyle} background: linear-gradient(135deg, #1abc9c, #16a085); color: white;"
+                            title="Cambiar a otra cama">
+                        🔄 Cambiar
+                    </button>
+                    <button onclick="markBedDirty(${bed.id})"
+                            style="${smallButtonStyle} background: #f39c12; color: white;"
+                            title="Marcar para limpieza">
+                        🧹
+                    </button>
+                `);
+                } else if (bed.status === 'reserved') {
+                    actions.push(`
+                    <button onclick="confirmReservation(${bed.id})"
+                            style="${buttonBaseStyle} background: linear-gradient(135deg, #3498db, #2980b9); color: white;"
+                            title="Confirmar Check-in">
+                        🏨 Check-in
+                    </button>
+                    <button onclick="cancelReservation(${bed.id})"
+                            style="${buttonBaseStyle} background: linear-gradient(135deg, #e74c3c, #c0392b); color: white;"
+                            title="Cancelar reserva">
+                        ❌ Cancelar
+                    </button>
+                `);
+                } else if (bed.status === 'maintenance') {
+                    actions.push(`
+                    <button onclick="endMaintenance(${bed.id})"
+                            style="${buttonBaseStyle} background: linear-gradient(135deg, #27ae60, #229954); color: white;"
+                            title="Finalizar mantenimiento">
+                        ✅ Listo
                     </button>
                 `);
                 }
 
-                // Siempre agregar botón de eliminar (si no está ocupada)
+                // Secondary actions row
+                actions.push(`</div><div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">`);
+
+                // History button (always)
+                actions.push(`
+                    <button onclick="showBedHistory(${bed.id})"
+                            style="${smallButtonStyle} background: #34495e; color: white;"
+                            title="Ver historial">
+                        📋
+                    </button>
+                `);
+
+                // Notes button (always)
+                actions.push(`
+                    <button onclick="showBedNotes(${bed.id})"
+                            style="${smallButtonStyle} background: ${bed.notes ? '#3498db' : '#bdc3c7'}; color: white;"
+                            title="${bed.notes ? 'Ver/Editar notas' : 'Agregar nota'}">
+                        📝
+                    </button>
+                `);
+
+                // Maintenance button (if not occupied or in maintenance)
+                if (bed.status !== 'occupied' && bed.status !== 'maintenance') {
+                    actions.push(`
+                    <button onclick="showMaintenanceModal(${bed.id})"
+                            style="${smallButtonStyle} background: #7f8c8d; color: white;"
+                            title="Poner en mantenimiento">
+                        🔧
+                    </button>
+                `);
+                }
+
+                // Delete button (if not occupied)
                 if (bed.status !== 'occupied') {
                     actions.push(`
                     <button onclick="deleteBed(${bed.id})"
-                            style="${buttonBaseStyle} background: linear-gradient(135deg, #e67e22, #d35400); color: #2c3e50; padding: 10px 12px;"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(230, 126, 34, 0.4)'"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)'"
-                            title="Eliminar Cama">
+                            style="${smallButtonStyle} background: #e74c3c; color: white;"
+                            title="Eliminar cama">
                         🗑️
                     </button>
                 `);
@@ -2983,6 +3797,9 @@
                 currentEditingBed = null;
                 document.getElementById('bed-modal-title').textContent = 'Nueva Cama';
                 document.getElementById('bed-form').reset();
+                document.getElementById('bed-notes').value = '';
+                document.getElementById('bed-guest-info').style.display = 'none';
+                document.getElementById('bed-delete-section').style.display = 'none';
                 document.getElementById('bed-modal').style.display = 'flex';
             }
 
@@ -2993,15 +3810,44 @@
 
                     if (bed) {
                         currentEditingBed = bed;
-                        document.getElementById('bed-modal-title').textContent = 'Editar Cama';
+                        document.getElementById('bed-modal-title').textContent = `Gestionar Cama ${bed.name}`;
                         document.getElementById('bed-name').value = bed.name;
                         document.getElementById('bed-room').value = bed.room || '';
                         document.getElementById('bed-price').value = bed.price;
                         document.getElementById('bed-status').value = bed.status;
+                        document.getElementById('bed-notes').value = bed.notes || '';
+
+                        // Show/hide guest info
+                        const guestInfoDiv = document.getElementById('bed-guest-info');
+                        if (bed.status === 'occupied' && bed.guest_name) {
+                            document.getElementById('bed-guest-name').textContent = bed.guest_name;
+                            document.getElementById('bed-guest-doc').textContent = `Doc: ${bed.guest_document || 'N/A'}`;
+                            guestInfoDiv.style.display = 'block';
+                        } else {
+                            guestInfoDiv.style.display = 'none';
+                        }
+
+                        // Solo admin puede eliminar camas
+                        const isAdmin = currentUser.role === 'administrador';
+                        document.getElementById('bed-delete-section').style.display = isAdmin ? 'block' : 'none';
+
                         document.getElementById('bed-modal').style.display = 'flex';
                     }
                 } catch (error) {
                     alert('Error al cargar datos de la cama');
+                }
+            }
+
+            async function deleteBedFromModal() {
+                if (currentEditingBed && confirm(`¿Eliminar la cama ${currentEditingBed.name}? Esta acción no se puede deshacer.`)) {
+                    try {
+                        await apiCall(`/beds/${currentEditingBed.id}`, 'DELETE');
+                        alert('Cama eliminada');
+                        closeBedModal();
+                        refreshBeds();
+                    } catch (error) {
+                        alert('Error: ' + (error.message || 'Error desconocido'));
+                    }
                 }
             }
 
@@ -3010,7 +3856,30 @@
                 currentEditingBed = null;
             }
 
-            // Form handler
+            // Variable para guardar la cama pendiente de asignar huésped
+            let pendingCheckinBedId = null;
+            let pendingBedFormData = null;
+
+            // Detectar cambio de estado en el dropdown
+            document.getElementById('bed-status').addEventListener('change', function(e) {
+                const newStatus = e.target.value;
+                const guestRequiredStates = ['occupied', 'reserved'];
+
+                // Si cambia a un estado que requiere huésped Y la cama no tiene huésped asignado
+                if (currentEditingBed && guestRequiredStates.includes(newStatus)) {
+                    // Verificar si ya tiene un huésped asignado
+                    if (!currentEditingBed.guest_id) {
+                        // IMPORTANTE: Guardar referencia ANTES de cerrar el modal
+                        // porque closeBedModal() pone currentEditingBed = null
+                        const bedToProcess = { ...currentEditingBed };
+                        pendingCheckinBedId = bedToProcess.id;
+                        closeBedModal();
+                        showGuestSelectorModal(bedToProcess, newStatus);
+                    }
+                }
+            });
+
+            // Form handler - versión simple sin interceptar
             document.getElementById('bed-form').addEventListener('submit', async function (e) {
                 e.preventDefault();
 
@@ -3018,23 +3887,16 @@
                     name: document.getElementById('bed-name').value,
                     room: document.getElementById('bed-room').value,
                     price: parseFloat(document.getElementById('bed-price').value),
-                    status: document.getElementById('bed-status').value
+                    status: document.getElementById('bed-status').value,
+                    notes: document.getElementById('bed-notes').value || null
                 };
 
                 try {
                     if (currentEditingBed) {
-                        // Editar cama existente
-                        await apiCall(`/beds/${currentEditingBed.id}`, {
-                            method: 'PUT',
-                            body: JSON.stringify(formData)
-                        });
+                        await apiCall(`/beds/${currentEditingBed.id}`, 'PUT', formData);
                         alert('Cama actualizada exitosamente');
                     } else {
-                        // Crear nueva cama
-                        await apiCall('/beds', {
-                            method: 'POST',
-                            body: JSON.stringify(formData)
-                        });
+                        await apiCall('/beds', 'POST', formData);
                         alert('Cama creada exitosamente');
                     }
 
@@ -3044,6 +3906,113 @@
                     alert('Error al guardar la cama: ' + (error.message || 'Error desconocido'));
                 }
             });
+
+            // ============= GUEST SELECTOR MODAL =============
+            let pendingBedStatus = 'occupied'; // 'occupied' o 'reserved'
+
+            async function showGuestSelectorModal(bed, targetStatus = 'occupied') {
+                pendingCheckinBedId = bed.id;
+                pendingBedStatus = targetStatus;
+
+                // Actualizar título según el tipo de acción
+                const isReservation = targetStatus === 'reserved';
+                const modalTitle = isReservation ? '📅 Seleccionar Huésped para Reserva' : '👤 Seleccionar Huésped para Check-in';
+                document.querySelector('#guest-selector-modal h2').textContent = modalTitle;
+
+                // Actualizar info de la cama
+                document.querySelector('#guest-selector-bed-info strong').textContent = bed.name;
+
+                // Cargar huéspedes disponibles (sin cama asignada)
+                try {
+                    const guests = await apiCall('/guests');
+                    const availableGuests = guests.filter(g => !g.current_bed_name);
+
+                    const listContainer = document.getElementById('guest-selector-list');
+
+                    if (availableGuests.length === 0) {
+                        listContainer.innerHTML = `
+                            <div style="text-align: center; padding: 30px; color: #95a5a6;">
+                                <p style="font-size: 48px; margin-bottom: 10px;">📭</p>
+                                <p>No hay huéspedes disponibles</p>
+                                <p style="font-size: 12px;">Registra un nuevo huésped para asignarlo a esta cama</p>
+                            </div>
+                        `;
+                    } else {
+                        listContainer.innerHTML = availableGuests.map(guest => `
+                            <div onclick="selectGuestForCheckin(${guest.id}, '${guest.name.replace(/'/g, "\\'")}')"
+                                 style="padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s;"
+                                 onmouseover="this.style.background='rgba(52, 152, 219, 0.3)'"
+                                 onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <p style="color: #ecf0f1; font-weight: bold; margin: 0;">👤 ${guest.name}</p>
+                                        <p style="color: #95a5a6; font-size: 12px; margin: 5px 0 0 0;">Doc: ${guest.document || 'N/A'}</p>
+                                    </div>
+                                    <span style="color: #3498db; font-size: 20px;">→</span>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+
+                    document.getElementById('guest-selector-modal').style.display = 'flex';
+                } catch (error) {
+                    alert('Error al cargar huéspedes: ' + error.message);
+                }
+            }
+
+            function closeGuestSelectorModal() {
+                document.getElementById('guest-selector-modal').style.display = 'none';
+                pendingCheckinBedId = null;
+                pendingBedFormData = null;
+                refreshBeds();
+            }
+
+            async function selectGuestForCheckin(guestId, guestName) {
+                if (!pendingCheckinBedId) {
+                    alert('Error: No hay cama seleccionada');
+                    return;
+                }
+
+                try {
+                    // Usar endpoint según el tipo de acción
+                    if (pendingBedStatus === 'reserved') {
+                        // Para reservas: usar endpoint de reserve
+                        await apiCall(`/beds/${pendingCheckinBedId}/reserve`, 'POST', {
+                            guest_id: guestId,
+                            reserved_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7 días por defecto
+                        });
+                        alert(`📅 Reserva exitosa!\n\nHuésped: ${guestName}\nCama reservada correctamente.`);
+                    } else {
+                        // Para ocupar: usar endpoint de checkin
+                        await apiCall(`/beds/${pendingCheckinBedId}/checkin`, 'POST', { guestId: guestId });
+                        alert(`✅ Check-in exitoso!\n\nHuésped: ${guestName}\nCama asignada correctamente.`);
+                    }
+
+                    closeGuestSelectorModal();
+                    refreshBeds();
+                } catch (error) {
+                    alert('Error: ' + (error.message || 'Error desconocido'));
+                }
+            }
+
+            function registerNewGuestAndReturn() {
+                // Guardar el ID de la cama pendiente en sessionStorage para recuperarlo después
+                if (pendingCheckinBedId) {
+                    sessionStorage.setItem('pendingCheckinBedId', pendingCheckinBedId);
+                }
+
+                // Cerrar el modal del selector
+                document.getElementById('guest-selector-modal').style.display = 'none';
+
+                // Ir a la vista de huéspedes y abrir el modal de registro
+                showView('guests');
+
+                // Pequeño delay para asegurar que la vista se cargue
+                setTimeout(() => {
+                    showGuestModal();
+                    alert('📝 Registra el nuevo huésped.\n\nDespués de guardarlo, vuelve a la sección de Camas y selecciona la cama para asignarle el huésped.');
+                }, 300);
+            }
 
             // Guest form handling
             document.getElementById('guest-form').addEventListener('submit', async function (e) {
@@ -3178,9 +4147,7 @@
             async function deleteBed(bedId) {
                 if (confirm('¿Estás seguro de que quieres eliminar esta cama?')) {
                     try {
-                        await apiCall(`/beds/${bedId}`, {
-                            method: 'DELETE'
-                        });
+                        await apiCall(`/beds/${bedId}`, 'DELETE');
                         alert('Cama eliminada exitosamente');
                         refreshBeds();
                     } catch (error) {
@@ -3189,16 +4156,316 @@
                 }
             }
 
-            async function markClean(bedId) {
+            // ============= ADVANCED BED MANAGEMENT =============
+
+            // Mark bed as clean (available)
+            async function markBedClean(bedId) {
                 try {
-                    await apiCall(`/beds/${bedId}/status`, {
-                        method: 'PUT',
-                        body: JSON.stringify({ status: 'clean' })
+                    await apiCall(`/beds/${bedId}/mark-clean`, 'PUT', { notes: 'Marked clean by user' });
+                    refreshBeds();
+                    showNotification('Cama marcada como disponible', 'success');
+                } catch (error) {
+                    alert('Error al actualizar la cama: ' + (error.message || 'Error desconocido'));
+                }
+            }
+
+            // Legacy function for compatibility
+            async function markClean(bedId) {
+                await markBedClean(bedId);
+            }
+
+            // Mark bed as dirty (needs cleaning)
+            async function markBedDirty(bedId) {
+                console.log('🧹 markBedDirty called with:', bedId);
+                alert('Marcando cama para limpieza: ' + bedId);
+                if (confirm('¿Marcar esta cama como "necesita limpieza"?')) {
+                    try {
+                        await apiCall(`/beds/${bedId}/mark-dirty`, 'PUT', { notes: 'Marked dirty by user' });
+                        refreshBeds();
+                        showNotification('Cama marcada para limpieza', 'warning');
+                    } catch (error) {
+                        alert('Error al actualizar la cama: ' + (error.message || 'Error desconocido'));
+                    }
+                }
+            }
+
+            // Show maintenance modal
+            function showMaintenanceModal(bedId) {
+                const reason = prompt('Razón del mantenimiento:');
+                if (reason !== null) {
+                    putBedInMaintenance(bedId, reason);
+                }
+            }
+
+            // Put bed in maintenance
+            async function putBedInMaintenance(bedId, reason) {
+                try {
+                    await apiCall(`/beds/${bedId}/maintenance`, 'PUT', { reason: reason || 'Mantenimiento general' });
+                    refreshBeds();
+                    showNotification('Cama en mantenimiento', 'info');
+                } catch (error) {
+                    alert('Error: ' + (error.message || 'Error desconocido'));
+                }
+            }
+
+            // End maintenance
+            async function endMaintenance(bedId) {
+                try {
+                    await apiCall(`/beds/${bedId}/mark-clean`, 'PUT', { notes: 'Maintenance completed' });
+                    refreshBeds();
+                    showNotification('Mantenimiento finalizado', 'success');
+                } catch (error) {
+                    alert('Error: ' + (error.message || 'Error desconocido'));
+                }
+            }
+
+            // Show reserve modal
+            async function showReserveModal(bedId) {
+                try {
+                    const guests = await apiCall('/guests');
+                    const availableGuests = guests.filter(g => !g.current_bed_id);
+
+                    if (availableGuests.length === 0) {
+                        alert('No hay huéspedes disponibles para reservar. Primero registra un huésped.');
+                        return;
+                    }
+
+                    const guestOptions = availableGuests.map((g, i) => `${i + 1}. ${g.name} (${g.document})`).join('\n');
+                    const selection = prompt(`Selecciona un huésped para la reserva:\n\n${guestOptions}\n\nIngresa el número:`);
+
+                    if (selection !== null) {
+                        const index = parseInt(selection) - 1;
+                        if (index >= 0 && index < availableGuests.length) {
+                            const untilDate = prompt('¿Hasta qué fecha? (YYYY-MM-DD)\nDeja vacío para reserva indefinida:');
+                            await reserveBed(bedId, availableGuests[index].id, untilDate);
+                        } else {
+                            alert('Selección inválida');
+                        }
+                    }
+                } catch (error) {
+                    alert('Error al cargar huéspedes: ' + (error.message || 'Error desconocido'));
+                }
+            }
+
+            // Reserve bed
+            async function reserveBed(bedId, guestId, reservedUntil) {
+                try {
+                    await apiCall(`/beds/${bedId}/reserve`, 'POST', {
+                        guest_id: guestId,
+                        reserved_until: reservedUntil || null
                     });
                     refreshBeds();
+                    showNotification('Cama reservada exitosamente', 'success');
                 } catch (error) {
-                    alert('Error al actualizar la cama');
+                    alert('Error al reservar: ' + (error.message || 'Error desconocido'));
                 }
+            }
+
+            // Confirm reservation (convert to check-in)
+            async function confirmReservation(bedId) {
+                try {
+                    const beds = await apiCall('/beds');
+                    const bed = beds.find(b => b.id === bedId);
+
+                    if (bed && bed.reserved_for_guest_id) {
+                        await apiCall(`/beds/${bedId}/checkin`, 'POST', { guestId: bed.reserved_for_guest_id });
+                        refreshBeds();
+                        showNotification('Check-in realizado exitosamente', 'success');
+                    } else {
+                        alert('No hay huésped asociado a esta reserva');
+                    }
+                } catch (error) {
+                    alert('Error al confirmar reserva: ' + (error.message || 'Error desconocido'));
+                }
+            }
+
+            // Cancel reservation
+            async function cancelReservation(bedId) {
+                if (confirm('¿Cancelar esta reserva?')) {
+                    try {
+                        await apiCall(`/beds/${bedId}/reserve`, 'DELETE', { notes: 'Reservation cancelled by user' });
+                        refreshBeds();
+                        showNotification('Reserva cancelada', 'info');
+                    } catch (error) {
+                        alert('Error al cancelar: ' + (error.message || 'Error desconocido'));
+                    }
+                }
+            }
+
+            // Show transfer modal
+            async function showTransferModal(fromBedId) {
+                console.log('🔄 showTransferModal called with:', fromBedId);
+                alert('Abriendo modal de transferencia para cama: ' + fromBedId);
+                try {
+                    const bedsByRoom = await apiCall('/beds/by-room');
+                    let availableBeds = [];
+
+                    Object.values(bedsByRoom).forEach(beds => {
+                        beds.forEach(bed => {
+                            if ((bed.status === 'clean' || bed.status === 'reserved') && bed.id !== fromBedId) {
+                                availableBeds.push(bed);
+                            }
+                        });
+                    });
+
+                    if (availableBeds.length === 0) {
+                        alert('No hay camas disponibles para transferir');
+                        return;
+                    }
+
+                    const bedOptions = availableBeds.map((b, i) => `${i + 1}. ${b.name} (${b.room || 'Sin habitación'}) - $${b.price}`).join('\n');
+                    const selection = prompt(`Selecciona la cama destino:\n\n${bedOptions}\n\nIngresa el número:`);
+
+                    if (selection !== null) {
+                        const index = parseInt(selection) - 1;
+                        if (index >= 0 && index < availableBeds.length) {
+                            await transferGuest(fromBedId, availableBeds[index].id);
+                        } else {
+                            alert('Selección inválida');
+                        }
+                    }
+                } catch (error) {
+                    alert('Error al cargar camas: ' + (error.message || 'Error desconocido'));
+                }
+            }
+
+            // Transfer guest between beds
+            async function transferGuest(fromBedId, toBedId) {
+                try {
+                    const result = await apiCall('/beds/transfer', 'POST', {
+                        from_bed_id: fromBedId,
+                        to_bed_id: toBedId,
+                        notes: 'Guest transfer'
+                    });
+                    refreshBeds();
+                    showNotification(`Huésped transferido a ${result.to_bed}`, 'success');
+                } catch (error) {
+                    alert('Error al transferir: ' + (error.message || 'Error desconocido'));
+                }
+            }
+
+            // Show bed history
+            async function showBedHistory(bedId) {
+                try {
+                    const response = await apiCall(`/beds/${bedId}/history`);
+                    const { bed, history } = response;
+
+                    let historyHtml = `
+                        <div style="max-height: 400px; overflow-y: auto;">
+                            <h3 style="margin-bottom: 15px;">Historial de ${bed.name}</h3>
+                            <p style="color: #666; margin-bottom: 15px;">Estado actual: <strong style="color: ${getBedColor(bed.status)}">${getBedStatusText(bed.status)}</strong></p>
+                    `;
+
+                    if (history.length === 0) {
+                        historyHtml += '<p style="color: #999; text-align: center;">No hay historial disponible</p>';
+                    } else {
+                        historyHtml += '<div style="border-left: 3px solid #3498db; padding-left: 15px;">';
+                        history.forEach(entry => {
+                            const date = new Date(entry.created_at).toLocaleString();
+                            const actionText = getActionText(entry.action);
+                            historyHtml += `
+                                <div style="margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px;">
+                                    <div style="font-weight: bold; color: #2c3e50;">${actionText}</div>
+                                    <div style="font-size: 12px; color: #666;">${date}</div>
+                                    ${entry.guest_name ? `<div style="font-size: 12px; color: #3498db;">Huésped: ${entry.guest_name}</div>` : ''}
+                                    ${entry.notes ? `<div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">${entry.notes}</div>` : ''}
+                                </div>
+                            `;
+                        });
+                        historyHtml += '</div>';
+                    }
+
+                    historyHtml += '</div>';
+
+                    // Show in a simple alert-like modal
+                    const modal = document.createElement('div');
+                    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+                    modal.innerHTML = `
+                        <div style="background: white; border-radius: 15px; padding: 25px; max-width: 500px; width: 90%; max-height: 80vh; overflow: hidden;">
+                            ${historyHtml}
+                            <button onclick="this.closest('div').parentElement.remove()" style="margin-top: 15px; width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                                Cerrar
+                            </button>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                } catch (error) {
+                    alert('Error al cargar historial: ' + (error.message || 'Error desconocido'));
+                }
+            }
+
+            // Get action text in Spanish
+            function getActionText(action) {
+                const actions = {
+                    'checkin': '🏨 Check-in',
+                    'checkout': '🚪 Check-out',
+                    'cleaned': '✨ Limpieza completada',
+                    'marked_dirty': '🧹 Marcada para limpieza',
+                    'maintenance_start': '🔧 Inicio de mantenimiento',
+                    'maintenance_end': '✅ Fin de mantenimiento',
+                    'reserved': '📅 Reservada',
+                    'reservation_cancelled': '❌ Reserva cancelada',
+                    'transfer_in': '➡️ Transferencia entrada',
+                    'transfer_out': '⬅️ Transferencia salida',
+                    'notes_updated': '📝 Notas actualizadas',
+                    'note': '📝 Nota agregada'
+                };
+                return actions[action] || action;
+            }
+
+            // Show bed notes
+            function showBedNotes(bedId) {
+                console.log('📝 showBedNotes called with:', bedId);
+                alert('Mostrando notas para cama: ' + bedId);
+                const bed = bedsDataCache[bedId];
+                const currentNotes = bed ? bed.notes : '';
+                const notes = prompt('Notas/Observaciones de la cama:', currentNotes || '');
+                if (notes !== null) {
+                    updateBedNotes(bedId, notes);
+                }
+            }
+
+            // Update bed notes
+            async function updateBedNotes(bedId, notes) {
+                try {
+                    await apiCall(`/beds/${bedId}/notes`, 'PUT', { notes });
+                    refreshBeds();
+                    showNotification('Notas actualizadas', 'success');
+                } catch (error) {
+                    alert('Error al actualizar notas: ' + (error.message || 'Error desconocido'));
+                }
+            }
+
+            // Show notification
+            function showNotification(message, type = 'info') {
+                const colors = {
+                    success: '#27ae60',
+                    error: '#e74c3c',
+                    warning: '#f39c12',
+                    info: '#3498db'
+                };
+
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: ${colors[type] || colors.info};
+                    color: white;
+                    padding: 15px 25px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                    z-index: 10001;
+                    animation: slideIn 0.3s ease;
+                    font-weight: bold;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
             }
 
             // ============= HUÉSPEDES FUNCTIONALITY =============
@@ -4323,6 +5590,8 @@
             }
 
             async function startCheckin(bedId, preselectedGuestId = null) {
+                console.log('🛏️ startCheckin called with:', bedId, preselectedGuestId);
+                alert('Check-in iniciando para cama: ' + bedId);
                 try {
                     if (preselectedGuestId) {
                         // Hacer check-in directo con huésped preseleccionado
@@ -4382,6 +5651,8 @@
             }
 
             async function startCheckout(bedId) {
+                console.log('🚪 startCheckout called with:', bedId);
+                alert('Check-out iniciando para cama: ' + bedId);
                 if (confirm('¿Estás seguro de que deseas hacer check-out de esta cama?')) {
                     try {
                         const result = await apiCall(`/beds/${bedId}/checkout`, 'POST');
@@ -4908,6 +6179,628 @@
                         });
                 });
             }
+
+            // Expose modal functions to global scope for onclick handlers
+            window.deleteBedFromModal = deleteBedFromModal;
+            window.closeBedModal = closeBedModal;
+            window.showEditBedModal = showEditBedModal;
+            window.showAddBedModal = showAddBedModal;
+            window.refreshBeds = refreshBeds;
+            // Guest selector functions
+            window.showGuestSelectorModal = showGuestSelectorModal;
+            window.closeGuestSelectorModal = closeGuestSelectorModal;
+            window.selectGuestForCheckin = selectGuestForCheckin;
+            window.registerNewGuestAndReturn = registerNewGuestAndReturn;
+
+            // ============================================
+            // FRONT DESK PANEL - ACCIONES RÁPIDAS 2AM
+            // ============================================
+
+            let frontDeskData = null;
+
+            // Cargar estado del front desk
+            async function refreshFrontDeskStatus() {
+                try {
+                    const response = await fetch('/api/front-desk/status', {
+                        headers: { 'session-id': sessionId }
+                    });
+                    if (!response.ok) throw new Error('Error loading front desk status');
+
+                    frontDeskData = await response.json();
+
+                    // Actualizar contador de disponibles
+                    document.getElementById('fd-available-count').textContent = frontDeskData.quick_stats.available_now;
+                    document.getElementById('fd-min-price').textContent =
+                        frontDeskData.quick_stats.min_price > 0
+                            ? `Desde $${frontDeskData.quick_stats.min_price.toLocaleString()}/noche`
+                            : 'Sin camas disponibles';
+
+                    // Actualizar llegadas pendientes
+                    const arrivalsList = document.getElementById('fd-arrivals-list');
+                    const arrivalsCount = document.getElementById('fd-arrivals-count');
+                    arrivalsCount.textContent = frontDeskData.pending_arrivals_count;
+
+                    if (frontDeskData.pending_arrivals.length > 0) {
+                        arrivalsList.innerHTML = frontDeskData.pending_arrivals.map(arrival => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: white; border-radius: 8px; margin-bottom: 5px;">
+                                <div>
+                                    <div style="font-weight: 600;">${arrival.guest_name}</div>
+                                    <div style="font-size: 12px; color: #7f8c8d;">${arrival.bed_name} • ${arrival.nights} noche(s)</div>
+                                </div>
+                                <button onclick="confirmArrival(${arrival.booking_id})"
+                                        style="background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                    <i class="fas fa-check"></i> Check-in
+                                </button>
+                            </div>
+                        `).join('');
+                    } else {
+                        arrivalsList.innerHTML = '<p style="color: #7f8c8d; font-size: 14px;">No hay llegadas pendientes</p>';
+                    }
+
+                    // Actualizar alertas
+                    const alertsList = document.getElementById('fd-alerts-list');
+                    const alertsCount = document.getElementById('fd-alerts-count');
+                    alertsCount.textContent = frontDeskData.alerts.length;
+
+                    if (frontDeskData.alerts.length > 0) {
+                        alertsList.innerHTML = frontDeskData.alerts.map(alert => `
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: ${alert.type === 'urgent' ? '#ffe6e6' : '#fff'}; border-radius: 8px; margin-bottom: 5px; border-left: 3px solid ${alert.type === 'urgent' ? '#e74c3c' : '#f39c12'};">
+                                <span>${alert.icon}</span>
+                                <span style="font-size: 13px;">${alert.message}</span>
+                            </div>
+                        `).join('');
+                    } else {
+                        alertsList.innerHTML = '<p style="color: #27ae60; font-size: 14px;"><i class="fas fa-check-circle"></i> Todo en orden</p>';
+                    }
+
+                    console.log('✅ Front desk status loaded');
+
+                } catch (error) {
+                    console.error('Error loading front desk status:', error);
+                }
+            }
+
+            // MODAL: CHECK-IN RÁPIDO
+            let currentGuestLookup = null; // Para guardar datos del huésped encontrado
+            let lookupTimeout = null;
+
+            function openQuickCheckinModal() {
+                document.getElementById('quick-checkin-modal').classList.add('active');
+                document.getElementById('quick-checkin-form').reset();
+                document.getElementById('qc-guest-nationality').value = 'Colombia';
+                document.getElementById('qc-guest-status').style.display = 'none';
+                currentGuestLookup = null;
+                document.body.style.overflow = 'hidden';
+                loadAvailableBedsForCheckin();
+                updateQuickCheckinTotal();
+                // Focus en documento primero
+                setTimeout(() => document.getElementById('qc-guest-document').focus(), 100);
+            }
+
+            function closeQuickCheckinModal() {
+                document.getElementById('quick-checkin-modal').classList.remove('active');
+                document.body.style.overflow = '';
+                currentGuestLookup = null;
+            }
+
+            // Búsqueda automática de huésped por documento
+            async function lookupGuestByDocument(document) {
+                if (!document || document.length < 3) {
+                    hideGuestStatus();
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/front-desk/guest-lookup?document=${encodeURIComponent(document)}`, {
+                        headers: { 'session-id': sessionId }
+                    });
+                    const result = await response.json();
+
+                    if (result.success && result.found) {
+                        currentGuestLookup = result.guest;
+                        showGuestFound(result.guest);
+                    } else {
+                        currentGuestLookup = null;
+                        showNewGuest();
+                    }
+                } catch (error) {
+                    console.error('Guest lookup error:', error);
+                    hideGuestStatus();
+                }
+            }
+
+            function showGuestFound(guest) {
+                const statusDiv = document.getElementById('qc-guest-status');
+                const icon = document.getElementById('qc-status-icon');
+                const text = document.getElementById('qc-status-text');
+                const history = document.getElementById('qc-guest-history');
+
+                // Check if blacklisted
+                if (guest.is_blacklisted) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.style.background = '#ffe6e6';
+                    statusDiv.style.border = '2px solid #e74c3c';
+                    icon.className = 'fas fa-ban';
+                    icon.style.color = '#e74c3c';
+                    text.innerHTML = `<strong style="color: #e74c3c;">⚠️ HUÉSPED EN LISTA NEGRA</strong>`;
+                    history.innerHTML = `Razón: ${guest.blacklist_reason || 'No especificada'}`;
+                    return;
+                }
+
+                statusDiv.style.display = 'block';
+
+                if (guest.is_frequent) {
+                    statusDiv.style.background = '#fff3cd';
+                    statusDiv.style.border = '2px solid #f39c12';
+                    icon.className = 'fas fa-star';
+                    icon.style.color = '#f39c12';
+                    text.innerHTML = `<strong style="color: #f39c12;">⭐ HUÉSPED FRECUENTE</strong> - ${guest.name}`;
+                } else {
+                    statusDiv.style.background = '#d4edda';
+                    statusDiv.style.border = '2px solid #27ae60';
+                    icon.className = 'fas fa-user-check';
+                    icon.style.color = '#27ae60';
+                    text.innerHTML = `<strong style="color: #27ae60;">✓ HUÉSPED CONOCIDO</strong> - ${guest.name}`;
+                }
+
+                history.innerHTML = `${guest.total_stays} estadía(s) anterior(es)` +
+                    (guest.total_spent > 0 ? ` • Total gastado: $${guest.total_spent.toLocaleString()}` : '');
+
+                // Autocompletar campos
+                document.getElementById('qc-guest-name').value = guest.name || '';
+                document.getElementById('qc-guest-phone').value = guest.phone || '';
+                document.getElementById('qc-guest-nationality').value = guest.nationality || 'Colombia';
+            }
+
+            function showNewGuest() {
+                const statusDiv = document.getElementById('qc-guest-status');
+                const icon = document.getElementById('qc-status-icon');
+                const text = document.getElementById('qc-status-text');
+                const history = document.getElementById('qc-guest-history');
+
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = '#e3f2fd';
+                statusDiv.style.border = '2px solid #3498db';
+                icon.className = 'fas fa-user-plus';
+                icon.style.color = '#3498db';
+                text.innerHTML = `<strong style="color: #3498db;">+ HUÉSPED NUEVO</strong>`;
+                history.innerHTML = 'Se creará un nuevo registro';
+            }
+
+            function hideGuestStatus() {
+                document.getElementById('qc-guest-status').style.display = 'none';
+                currentGuestLookup = null;
+            }
+
+            // Event listener para búsqueda al escribir documento
+            document.getElementById('qc-guest-document')?.addEventListener('input', (e) => {
+                clearTimeout(lookupTimeout);
+                const doc = e.target.value.trim();
+
+                // Debounce: esperar 500ms después de dejar de escribir
+                lookupTimeout = setTimeout(() => {
+                    lookupGuestByDocument(doc);
+                }, 500);
+            });
+
+            // También buscar cuando sale del campo
+            document.getElementById('qc-guest-document')?.addEventListener('blur', (e) => {
+                clearTimeout(lookupTimeout);
+                const doc = e.target.value.trim();
+                if (doc.length >= 3) {
+                    lookupGuestByDocument(doc);
+                }
+            });
+
+            async function loadAvailableBedsForCheckin() {
+                const select = document.getElementById('qc-bed-select');
+                select.innerHTML = '<option value="">Cargando...</option>';
+
+                try {
+                    if (frontDeskData && frontDeskData.available_beds) {
+                        select.innerHTML = '<option value="">Seleccionar cama...</option>' +
+                            frontDeskData.available_beds.map(bed =>
+                                `<option value="${bed.id}" data-price="${bed.price}">${bed.name} (${bed.room}) - $${bed.price.toLocaleString()}/noche</option>`
+                            ).join('');
+                    } else {
+                        await refreshFrontDeskStatus();
+                        loadAvailableBedsForCheckin();
+                    }
+                } catch (error) {
+                    select.innerHTML = '<option value="">Error cargando camas</option>';
+                }
+            }
+
+            function updateQuickCheckinTotal() {
+                const select = document.getElementById('qc-bed-select');
+                const nights = parseInt(document.getElementById('qc-nights').value) || 1;
+                const selectedOption = select.options[select.selectedIndex];
+                const price = selectedOption ? parseFloat(selectedOption.dataset.price) || 0 : 0;
+
+                const total = price * nights;
+                document.getElementById('qc-total').textContent = `$${total.toLocaleString()}`;
+
+                // Actualizar fecha de checkout
+                const checkout = new Date();
+                checkout.setDate(checkout.getDate() + nights);
+                document.getElementById('qc-checkout-date').value = checkout.toISOString().split('T')[0];
+            }
+
+            // Event listener para cambio de cama
+            document.getElementById('qc-bed-select')?.addEventListener('change', updateQuickCheckinTotal);
+
+            // Submit check-in rápido
+            document.getElementById('quick-checkin-form')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Validación: huésped en blacklist
+                if (currentGuestLookup && currentGuestLookup.is_blacklisted) {
+                    if (!confirm('⚠️ ATENCIÓN: Este huésped está en la LISTA NEGRA.\n\n¿Desea continuar de todas formas?')) {
+                        return;
+                    }
+                }
+
+                const btn = document.getElementById('qc-submit-btn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+                try {
+                    const select = document.getElementById('qc-bed-select');
+
+                    // Validar que se seleccionó una cama
+                    if (!select.value) {
+                        alert('❌ Por favor selecciona una cama');
+                        return;
+                    }
+
+                    const nights = parseInt(document.getElementById('qc-nights').value) || 1;
+                    const price = parseFloat(select.options[select.selectedIndex].dataset.price) || 0;
+                    const paymentMethod = document.querySelector('input[name="qc-payment"]:checked').value;
+
+                    const data = {
+                        guest_name: document.getElementById('qc-guest-name').value.trim(),
+                        guest_document: document.getElementById('qc-guest-document').value.trim(),
+                        guest_phone: document.getElementById('qc-guest-phone').value.trim() || null,
+                        guest_nationality: document.getElementById('qc-guest-nationality').value.trim(),
+                        bed_id: parseInt(select.value),
+                        nights: nights,
+                        payment_method: paymentMethod,
+                        payment_amount: paymentMethod !== 'pending' ? (price * nights) : 0
+                    };
+
+                    // Validaciones básicas
+                    if (!data.guest_name || !data.guest_document) {
+                        alert('❌ Nombre y documento son requeridos');
+                        return;
+                    }
+
+                    const response = await fetch('/api/quick-checkin', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'session-id': sessionId
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Calcular fecha checkout para mostrar
+                        const checkoutDate = new Date(result.booking.check_out);
+                        const checkoutStr = checkoutDate.toLocaleDateString('es-CO', {
+                            weekday: 'short', day: 'numeric', month: 'short'
+                        });
+
+                        const isNewGuest = result.guest.is_new ? '(NUEVO)' : '(conocido)';
+                        const paymentInfo = result.payment
+                            ? `Pagado: $${result.payment.amount.toLocaleString()} (${result.payment.method})`
+                            : 'Pago: PENDIENTE';
+
+                        const balanceInfo = result.booking.balance_due > 0
+                            ? `\n⚠️ Saldo pendiente: $${result.booking.balance_due.toLocaleString()}`
+                            : '\n✓ Pagado completo';
+
+                        alert(`✅ CHECK-IN EXITOSO\n` +
+                            `━━━━━━━━━━━━━━━━━━━━━\n` +
+                            `👤 ${result.guest.name} ${isNewGuest}\n` +
+                            `🛏️ ${result.bed.name} (${result.bed.room || 'Hab.'})\n` +
+                            `📅 Checkout: ${checkoutStr}\n` +
+                            `🌙 ${result.booking.nights} noche(s)\n` +
+                            `━━━━━━━━━━━━━━━━━━━━━\n` +
+                            `💰 Total: $${result.booking.total.toLocaleString()}\n` +
+                            `${paymentInfo}${balanceInfo}\n` +
+                            `━━━━━━━━━━━━━━━━━━━━━\n` +
+                            `🔖 Código: ${result.booking.confirmation_code}`);
+
+                        closeQuickCheckinModal();
+                        refreshFrontDeskStatus();
+                        loadDashboardData();
+                    } else {
+                        alert('❌ Error: ' + result.error);
+                    }
+                } catch (error) {
+                    alert('❌ Error: ' + error.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> CONFIRMAR CHECK-IN';
+                }
+            });
+
+            // MODAL: COBRAR PAGO
+            function openQuickPaymentModal() {
+                document.getElementById('quick-payment-modal').classList.add('active');
+                document.getElementById('quick-payment-form').reset();
+                document.getElementById('qp-guest-info').style.display = 'none';
+                document.body.style.overflow = 'hidden';
+                loadOccupiedBedsForPayment();
+            }
+
+            function closeQuickPaymentModal() {
+                document.getElementById('quick-payment-modal').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            async function loadOccupiedBedsForPayment() {
+                const select = document.getElementById('qp-bed-select');
+                select.innerHTML = '<option value="">Cargando...</option>';
+
+                try {
+                    if (frontDeskData && frontDeskData.current_guests) {
+                        select.innerHTML = '<option value="">Seleccionar cama...</option>' +
+                            frontDeskData.current_guests.map(g =>
+                                `<option value="${g.booking_id}" data-guest="${g.guest_name}" data-balance="${g.balance_due}">${g.bed_name} - ${g.guest_name}</option>`
+                            ).join('');
+                    }
+                } catch (error) {
+                    select.innerHTML = '<option value="">Error</option>';
+                }
+            }
+
+            function loadGuestAccountForPayment() {
+                const select = document.getElementById('qp-bed-select');
+                const option = select.options[select.selectedIndex];
+
+                if (option && option.value) {
+                    document.getElementById('qp-guest-info').style.display = 'block';
+                    document.getElementById('qp-guest-name').textContent = option.dataset.guest;
+                    document.getElementById('qp-guest-balance').textContent = `Saldo pendiente: $${parseFloat(option.dataset.balance).toLocaleString()}`;
+                    document.getElementById('qp-amount').value = option.dataset.balance;
+                } else {
+                    document.getElementById('qp-guest-info').style.display = 'none';
+                }
+            }
+
+            document.getElementById('quick-payment-form')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const bookingId = document.getElementById('qp-bed-select').value;
+                const amount = parseFloat(document.getElementById('qp-amount').value);
+                const method = document.querySelector('input[name="qp-method"]:checked').value;
+
+                if (!bookingId || !amount) {
+                    alert('Selecciona una cama y monto');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/quick-payment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'session-id': sessionId
+                        },
+                        body: JSON.stringify({ booking_id: bookingId, amount, method })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert(`✅ Pago registrado!\n\nMonto: $${amount.toLocaleString()}\nSaldo restante: $${result.booking.balance_due.toLocaleString()}`);
+                        closeQuickPaymentModal();
+                        refreshFrontDeskStatus();
+                    } else {
+                        alert('❌ Error: ' + result.error);
+                    }
+                } catch (error) {
+                    alert('❌ Error: ' + error.message);
+                }
+            });
+
+            // MODAL: CHECK-OUT RÁPIDO
+            function openQuickCheckoutModal() {
+                document.getElementById('quick-checkout-modal').classList.add('active');
+                document.getElementById('quick-checkout-form').reset();
+                document.getElementById('qco-guest-info').style.display = 'none';
+                document.getElementById('qco-payment-section').style.display = 'none';
+                document.body.style.overflow = 'hidden';
+                loadOccupiedBedsForCheckout();
+            }
+
+            function closeQuickCheckoutModal() {
+                document.getElementById('quick-checkout-modal').classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            async function loadOccupiedBedsForCheckout() {
+                const select = document.getElementById('qco-bed-select');
+                select.innerHTML = '<option value="">Cargando...</option>';
+
+                try {
+                    if (frontDeskData && frontDeskData.current_guests) {
+                        select.innerHTML = '<option value="">Seleccionar cama...</option>' +
+                            frontDeskData.current_guests.map(g =>
+                                `<option value="${g.bed_id}" data-booking="${g.booking_id}" data-guest="${g.guest_name}" data-total="${g.total}" data-paid="${g.total_paid}" data-balance="${g.balance_due}">${g.bed_name} - ${g.guest_name}</option>`
+                            ).join('');
+                    }
+                } catch (error) {
+                    select.innerHTML = '<option value="">Error</option>';
+                }
+            }
+
+            function loadGuestForCheckout() {
+                const select = document.getElementById('qco-bed-select');
+                const option = select.options[select.selectedIndex];
+
+                if (option && option.value) {
+                    const balance = parseFloat(option.dataset.balance);
+                    document.getElementById('qco-guest-info').style.display = 'block';
+                    document.getElementById('qco-guest-name').textContent = option.dataset.guest;
+                    document.getElementById('qco-total').textContent = `$${parseFloat(option.dataset.total).toLocaleString()}`;
+                    document.getElementById('qco-paid').textContent = `$${parseFloat(option.dataset.paid).toLocaleString()}`;
+                    document.getElementById('qco-balance').textContent = `$${balance.toLocaleString()}`;
+                    document.getElementById('qco-balance').style.color = balance > 0 ? '#e74c3c' : '#27ae60';
+
+                    if (balance > 0) {
+                        document.getElementById('qco-payment-section').style.display = 'block';
+                        document.getElementById('qco-payment-amount').value = balance;
+                    } else {
+                        document.getElementById('qco-payment-section').style.display = 'none';
+                    }
+                } else {
+                    document.getElementById('qco-guest-info').style.display = 'none';
+                    document.getElementById('qco-payment-section').style.display = 'none';
+                }
+            }
+
+            document.getElementById('quick-checkout-form')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const select = document.getElementById('qco-bed-select');
+                const option = select.options[select.selectedIndex];
+                const bedId = select.value;
+                const bookingId = option.dataset.booking;
+                const paymentAmount = parseFloat(document.getElementById('qco-payment-amount').value) || 0;
+                const paymentMethod = document.querySelector('input[name="qco-method"]:checked')?.value || 'cash';
+                const markClean = document.getElementById('qco-mark-clean').checked;
+
+                if (!bedId) {
+                    alert('Selecciona una cama');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/quick-checkout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'session-id': sessionId
+                        },
+                        body: JSON.stringify({
+                            bed_id: bedId,
+                            booking_id: bookingId,
+                            payment_amount: paymentAmount,
+                            payment_method: paymentMethod,
+                            mark_clean: markClean
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        let msg = `✅ Check-out exitoso!\n\n${result.booking.guest_name}`;
+                        if (result.payment_warning) msg += `\n\n⚠️ ${result.payment_warning}`;
+                        alert(msg);
+                        closeQuickCheckoutModal();
+                        refreshFrontDeskStatus();
+                        loadDashboardData();
+                    } else {
+                        alert('❌ Error: ' + result.error);
+                    }
+                } catch (error) {
+                    alert('❌ Error: ' + error.message);
+                }
+            });
+
+            // Confirmar llegada de reserva existente
+            async function confirmArrival(bookingId) {
+                if (!confirm('¿Confirmar check-in de esta reserva?')) return;
+
+                try {
+                    const response = await fetch('/api/front-desk/confirm-arrival', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'session-id': sessionId
+                        },
+                        body: JSON.stringify({ booking_id: bookingId })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert(`✅ Check-in confirmado!\n\n${result.booking.guest_name} → ${result.booking.bed_name}`);
+                        refreshFrontDeskStatus();
+                        loadDashboardData();
+                    } else {
+                        alert('❌ Error: ' + result.error);
+                    }
+                } catch (error) {
+                    alert('❌ Error: ' + error.message);
+                }
+            }
+
+            // Búsqueda rápida
+            document.getElementById('fd-search')?.addEventListener('keypress', async (e) => {
+                if (e.key === 'Enter') {
+                    const query = e.target.value.trim();
+                    if (query.length < 2) return;
+
+                    try {
+                        const response = await fetch(`/api/front-desk/search?q=${encodeURIComponent(query)}`, {
+                            headers: { 'session-id': sessionId }
+                        });
+                        const result = await response.json();
+
+                        if (result.success && result.results.length > 0) {
+                            const first = result.results[0];
+                            alert(`Encontrado: ${first.type}\n\n${JSON.stringify(first, null, 2)}`);
+                        } else {
+                            alert('No se encontraron resultados');
+                        }
+                    } catch (error) {
+                        console.error('Search error:', error);
+                    }
+                }
+            });
+
+            // Cerrar modales al hacer click fuera
+            document.querySelectorAll('.fd-modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            });
+
+            // Cerrar modales con tecla Escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.fd-modal-overlay.active').forEach(modal => {
+                        modal.classList.remove('active');
+                        document.body.style.overflow = '';
+                    });
+                }
+            });
+
+            // Cargar front desk al inicio
+            if (sessionId) {
+                refreshFrontDeskStatus();
+            }
+
+            // Exponer funciones al scope global
+            window.openQuickCheckinModal = openQuickCheckinModal;
+            window.closeQuickCheckinModal = closeQuickCheckinModal;
+            window.openQuickPaymentModal = openQuickPaymentModal;
+            window.closeQuickPaymentModal = closeQuickPaymentModal;
+            window.openQuickCheckoutModal = openQuickCheckoutModal;
+            window.closeQuickCheckoutModal = closeQuickCheckoutModal;
+            window.refreshFrontDeskStatus = refreshFrontDeskStatus;
+            window.confirmArrival = confirmArrival;
+            window.updateQuickCheckinTotal = updateQuickCheckinTotal;
+            window.loadGuestAccountForPayment = loadGuestAccountForPayment;
+            window.loadGuestForCheckout = loadGuestForCheckout;
         </script>
 </body>
 
