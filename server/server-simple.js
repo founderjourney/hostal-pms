@@ -127,7 +127,28 @@ async function initializeDatabase() {
       status TEXT DEFAULT 'clean',
       room TEXT,
       guest_id INTEGER,
+      notes TEXT,
+      maintenance_reason TEXT,
+      reserved_until DATETIME,
+      reserved_for_guest_id INTEGER,
+      last_cleaned_at DATETIME,
+      last_cleaned_by INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(guest_id) REFERENCES guests(id)
+    )`);
+
+    // Bed History Table (tracks all bed state changes)
+    await dbRun(`CREATE TABLE IF NOT EXISTS bed_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      bed_id INTEGER NOT NULL,
+      guest_id INTEGER,
+      action TEXT NOT NULL,
+      previous_status TEXT,
+      new_status TEXT,
+      notes TEXT,
+      performed_by INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(bed_id) REFERENCES beds(id),
       FOREIGN KEY(guest_id) REFERENCES guests(id)
     )`);
 
@@ -138,6 +159,7 @@ async function initializeDatabase() {
       price REAL NOT NULL,
       category TEXT,
       stock INTEGER DEFAULT 0,
+      image_url TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
@@ -195,6 +217,7 @@ async function initializeDatabase() {
       price REAL NOT NULL,
       category TEXT NOT NULL,
       stock INTEGER DEFAULT 0,
+      image_url TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
@@ -265,6 +288,71 @@ async function initializeDatabase() {
       ip_address TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Guest Reviews tables (DEV4 - Feedback System)
+    await dbRun(`CREATE TABLE IF NOT EXISTS guest_reviews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      guest_id INTEGER REFERENCES guests(id),
+      booking_id INTEGER REFERENCES bookings(id),
+      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      comment TEXT,
+      category_ratings TEXT,
+      review_token TEXT UNIQUE,
+      token_expires_at DATETIME,
+      staff_response TEXT,
+      responded_by INTEGER,
+      responded_at DATETIME,
+      is_public BOOLEAN DEFAULT 1,
+      is_verified BOOLEAN DEFAULT 0,
+      language TEXT DEFAULT 'es',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    await dbRun(`CREATE TABLE IF NOT EXISTS review_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      booking_id INTEGER REFERENCES bookings(id),
+      review_token TEXT NOT NULL,
+      sent_via TEXT DEFAULT 'email',
+      sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      opened_at DATETIME,
+      completed_at DATETIME,
+      reminder_sent_at DATETIME
+    )`);
+
+    // Push Notifications tables (DEV2-03)
+    await dbRun(`CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER REFERENCES users(id),
+      endpoint TEXT NOT NULL UNIQUE,
+      keys_p256dh TEXT NOT NULL,
+      keys_auth TEXT NOT NULL,
+      user_agent TEXT,
+      device_type VARCHAR(50),
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_used_at DATETIME
+    )`);
+
+    await dbRun(`CREATE TABLE IF NOT EXISTS notification_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type VARCHAR(50) NOT NULL,
+      title VARCHAR(200) NOT NULL,
+      body TEXT,
+      data TEXT,
+      sent_to_count INTEGER DEFAULT 0,
+      success_count INTEGER DEFAULT 0,
+      failure_count INTEGER DEFAULT 0,
+      sent_by INTEGER REFERENCES users(id),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+
+    // Migration: Add image_url to products if not exists (DEV2-05)
+    try {
+      await dbRun(`ALTER TABLE products ADD COLUMN image_url TEXT`);
+      console.log('✅ Migration: Added image_url to products table');
+    } catch (e) {
+      // Column already exists, ignore
+    }
 
     // Check if we need demo data
     const guestCount = await dbGet('SELECT COUNT(*) as count FROM guests');
@@ -556,8 +644,12 @@ app.get('/api/debug/users', async (req, res) => {
   }
 });
 
-// Apply rate limiting to API routes
-app.use('/api', apiLimiter);
+// Apply rate limiting to API routes (disabled in development)
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api', apiLimiter);
+} else {
+  console.log('⚠️ Rate limiting disabled in development mode');
+}
 
 // Login endpoint with strict rate limiting
 app.post('/api/login', authLimiter, async (req, res) => {
@@ -862,6 +954,202 @@ app.get('/api/reports/insights', async (req, res) => {
 });
 
 // ============================================
+// DEV2-06: GRAFICOS INTERACTIVOS - ENDPOINTS
+// ============================================
+
+// 4. Monthly Occupancy Data (Bar Chart)
+app.get('/api/reports/occupancy-monthly', async (req, res) => {
+  try {
+    const year = req.query.year || new Date().getFullYear();
+    const labels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const values = [];
+
+    const bedsResult = await dbGet(`SELECT COUNT(*) as total FROM beds WHERE status != 'maintenance'`);
+    const totalBeds = bedsResult ? parseInt(bedsResult.total) : 27;
+
+    for (let month = 1; month <= 12; month++) {
+      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      const endDate = month === 12
+        ? `${parseInt(year) + 1}-01-01`
+        : `${year}-${String(month + 1).padStart(2, '0')}-01`;
+
+      const daysInMonth = new Date(year, month, 0).getDate();
+
+      const query = `
+        SELECT COUNT(*) as nights
+        FROM bookings
+        WHERE check_in < ? AND check_out > ?
+          AND status IN ('confirmed', 'checked_in', 'checked_out')
+      `;
+      const result = await dbGet(query, [endDate, startDate]);
+      const occupiedNights = result ? parseInt(result.nights) : 0;
+
+      const maxNights = totalBeds * daysInMonth;
+      const occupancy = maxNights > 0 ? Math.round((occupiedNights / maxNights) * 100) : 0;
+      values.push(Math.min(occupancy, 100));
+    }
+
+    res.json({ labels, values });
+  } catch (error) {
+    logger.error('Error in occupancy-monthly:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 5. Weekly Revenue Data (Line Chart)
+app.get('/api/reports/revenue-weekly', async (req, res) => {
+  try {
+    const labels = [];
+    const values = [];
+    const today = new Date();
+
+    for (let i = 11; i >= 0; i--) {
+      const weekEnd = new Date(today);
+      weekEnd.setDate(weekEnd.getDate() - (i * 7));
+      const weekStart = new Date(weekEnd);
+      weekStart.setDate(weekStart.getDate() - 7);
+
+      const startStr = weekStart.toISOString().split('T')[0];
+      const endStr = weekEnd.toISOString().split('T')[0];
+
+      labels.push(`Sem ${12 - i}`);
+
+      // Sum from cashbox transactions
+      const query = `
+        SELECT COALESCE(SUM(amount), 0) as total
+        FROM cashbox_transactions
+        WHERE transaction_type = 'income'
+          AND created_at >= ? AND created_at < ?
+      `;
+      const result = await dbGet(query, [startStr, endStr]);
+      values.push(result ? parseFloat(result.total) : 0);
+    }
+
+    res.json({ labels, values });
+  } catch (error) {
+    logger.error('Error in revenue-weekly:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 6. Guest Distribution Data (Pie Chart)
+// Uses booking source or guest nationality for distribution
+app.get('/api/reports/guest-distribution', async (req, res) => {
+  try {
+    const { by = 'source' } = req.query; // 'source' or 'nationality'
+
+    if (by === 'nationality') {
+      // Distribution by guest nationality
+      const query = `
+        SELECT
+          COALESCE(g.nationality, 'No especificado') as type,
+          COUNT(DISTINCT b.id) as count
+        FROM bookings b
+        JOIN guests g ON b.guest_id = g.id
+        WHERE b.status IN ('confirmed', 'checked_in', 'checked_out')
+        GROUP BY g.nationality
+        ORDER BY count DESC
+        LIMIT 10
+      `;
+      const rows = await dbAll(query);
+
+      if (rows.length > 0) {
+        res.json({
+          labels: rows.map(r => r.type),
+          values: rows.map(r => parseInt(r.count))
+        });
+        return;
+      }
+    }
+
+    // Default: Distribution by booking source
+    const sourceQuery = `
+      SELECT
+        COALESCE(source, 'walkin') as type,
+        COUNT(*) as count
+      FROM bookings
+      WHERE status IN ('confirmed', 'checked_in', 'checked_out', 'pending')
+      GROUP BY source
+      ORDER BY count DESC
+    `;
+    const sourceRows = await dbAll(sourceQuery);
+
+    const sourceLabels = {
+      'walkin': 'Walk-in',
+      'booking': 'Booking.com',
+      'airbnb': 'Airbnb',
+      'direct': 'Directo',
+      'phone': 'Teléfono',
+      'email': 'Email',
+      'website': 'Web',
+      'referral': 'Referido'
+    };
+
+    if (sourceRows.length > 0) {
+      res.json({
+        labels: sourceRows.map(r => sourceLabels[r.type] || r.type),
+        values: sourceRows.map(r => parseInt(r.count))
+      });
+    } else {
+      // Return sample data if no bookings
+      res.json({
+        labels: ['Walk-in', 'Booking.com', 'Directo', 'Teléfono'],
+        values: [40, 30, 20, 10]
+      });
+    }
+  } catch (error) {
+    logger.error('Error in guest-distribution:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 7. Year-over-Year Comparison Data (Line Chart)
+app.get('/api/reports/yoy-comparison', async (req, res) => {
+  try {
+    const currentYear = new Date().getFullYear();
+    const previousYear = currentYear - 1;
+    const labels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const currentYearData = [];
+    const previousYearData = [];
+
+    for (let month = 1; month <= 12; month++) {
+      // Current year
+      const currStart = `${currentYear}-${String(month).padStart(2, '0')}-01`;
+      const currEnd = month === 12
+        ? `${currentYear + 1}-01-01`
+        : `${currentYear}-${String(month + 1).padStart(2, '0')}-01`;
+
+      const currQuery = `
+        SELECT COALESCE(SUM(amount), 0) as total
+        FROM cashbox_transactions
+        WHERE transaction_type = 'income'
+          AND created_at >= ? AND created_at < ?
+      `;
+      const currResult = await dbGet(currQuery, [currStart, currEnd]);
+      currentYearData.push(currResult ? parseFloat(currResult.total) : 0);
+
+      // Previous year
+      const prevStart = `${previousYear}-${String(month).padStart(2, '0')}-01`;
+      const prevEnd = month === 12
+        ? `${previousYear + 1}-01-01`
+        : `${previousYear}-${String(month + 1).padStart(2, '0')}-01`;
+
+      const prevResult = await dbGet(currQuery, [prevStart, prevEnd]);
+      previousYearData.push(prevResult ? parseFloat(prevResult.total) : 0);
+    }
+
+    res.json({
+      labels,
+      currentYear: currentYearData,
+      previousYear: previousYearData
+    });
+  } catch (error) {
+    logger.error('Error in yoy-comparison:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ============================================
 // IMPORT MODULES
 // ============================================
 
@@ -871,7 +1159,18 @@ const analyticsModule = require('./modules/analytics');
 const staffModule = require('./modules/staff');
 const tasksModule = require('./modules/tasks');
 const cashboxModule = require('./modules/cashbox');
+const bedsAdvancedModule = require('./modules/beds-advanced');
+const frontDeskModule = require('./modules/front-desk');
+const paymentsModule = require('./modules/payments');
+const reviewsModule = require('./modules/reviews');
+const adminBackupsModule = require('./modules/admin-backups');
+const pricingModule = require('./modules/pricing');
+const auditModule = require('./modules/audit');
+const notificationsModule = require('./modules/notifications');
+const whatsappModule = require('./modules/whatsapp');
+const emailModule = require('./modules/email');
 const ICalSyncCron = require('./cron/sync-ical');
+const whatsappAutomation = require('./cron/whatsapp-automation');
 
 // ============================================
 // MIDDLEWARES
@@ -1023,6 +1322,132 @@ app.use('/api/cashbox', requireAuth, (req, res, next) => {
   next();
 }, cashboxModule);
 
+// Payments module (Stripe integration)
+// Note: /webhook endpoint should be accessible without auth for Stripe webhooks
+app.use('/api/payments', (req, res, next) => {
+  req.app.locals.db = dbAdapter;
+  // Skip auth for webhook endpoint
+  if (req.path === '/webhook') {
+    return next();
+  }
+  // All other endpoints require authentication
+  requireAuth(req, res, () => {
+    req.session = req.user;
+    next();
+  });
+}, paymentsModule);
+
+// Email module (SendGrid integration)
+app.use('/api/email', (req, res, next) => {
+  req.app.locals.db = dbAdapter;
+  // Status endpoint is public
+  if (req.path === '/status' && req.method === 'GET') {
+    return next();
+  }
+  // All other endpoints require authentication
+  requireAuth(req, res, () => {
+    req.session = req.user;
+    next();
+  });
+}, emailModule);
+
+// Reviews module (guest feedback system)
+// Public endpoints: GET /public, GET /token/:token, POST / (with token)
+// Auth required: GET /, GET /stats, GET /:id, POST /:id/respond, PUT /:id/visibility, POST /request/:bookingId
+app.use('/api/reviews', (req, res, next) => {
+  req.app.locals.db = dbAdapter;
+  // Public endpoints (no auth required)
+  const publicPaths = ['/public', '/token'];
+  const isPublicGet = req.method === 'GET' && publicPaths.some(p => req.path.startsWith(p));
+  const isPublicPost = req.method === 'POST' && req.path === '/';
+
+  if (isPublicGet || isPublicPost) {
+    return next();
+  }
+  // All other endpoints require authentication
+  requireAuth(req, res, () => {
+    req.session = req.user;
+    next();
+  });
+}, reviewsModule);
+
+// Admin Backups module (backup/restore management)
+// All endpoints require admin authentication
+app.use('/api/admin/backups', requireAuth, (req, res, next) => {
+  req.app.set('db', dbAdapter);
+  req.session = req.user;
+  // Only admins can access backup functions
+  if (req.user.role !== 'admin' && req.user.role !== 'administrador') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+}, adminBackupsModule);
+
+// Audit module (DEV3-11: Complete Audit Logging)
+// All endpoints require admin authentication
+auditModule.initDb(dbAll, dbGet, dbRun);
+auditModule.migrateAuditTable().catch(err => logger.error('Audit migration error:', err));
+app.use('/api/admin/audit', requireAuth, (req, res, next) => {
+  req.session = req.user;
+  if (req.session?.role !== 'admin' && req.session?.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+}, auditModule.router);
+
+// Push Notifications module (DEV2-03)
+// Public endpoints: GET /vapid-public-key
+// Auth required: POST /subscribe, DELETE /unsubscribe, POST /test, POST /send, GET /subscriptions
+notificationsModule.configureVapid();
+app.use('/api/notifications', (req, res, next) => {
+  req.app.locals.db = dbAdapter;
+  // Public endpoint (no auth required)
+  if (req.method === 'GET' && req.path === '/vapid-public-key') {
+    return next();
+  }
+  // All other endpoints require authentication
+  requireAuth(req, res, () => {
+    req.session = req.user;
+    next();
+  });
+}, notificationsModule);
+
+// WhatsApp module (DEV4-04: Evolution API Integration)
+// Public endpoints: POST /webhook (for incoming messages)
+// Auth required: All other endpoints
+app.use('/api/whatsapp', (req, res, next) => {
+  req.db = dbAdapter;
+  // Webhook endpoint is public (called by Evolution API)
+  if (req.method === 'POST' && req.path === '/webhook') {
+    return next();
+  }
+  // All other endpoints require authentication
+  requireAuth(req, res, () => {
+    req.session = req.user;
+    next();
+  });
+}, whatsappModule);
+
+// Pricing module (DEV3-05: Dynamic Pricing)
+// Initialize pricing module with database functions
+pricingModule.initDb(dbAll, dbGet, dbRun);
+pricingModule.initPricingTables().then(() => {
+  console.log('   ✅ Pricing tables initialized');
+}).catch(err => {
+  console.error('   ❌ Pricing tables error:', err.message);
+});
+app.use('/api/pricing', requireAuth, (req, res, next) => {
+  req.app.locals.db = dbAdapter;
+  req.session = req.user;
+  next();
+}, pricingModule.router);
+
+// Advanced Bed Management module (in-app routes)
+bedsAdvancedModule.registerBedAdvancedRoutes(app, requireAuth, dbAll, dbGet, dbRun, logActivity);
+
+// Front Desk module (quick check-in/out for 2am scenarios)
+frontDeskModule.registerFrontDeskRoutes(app, requireAuth, dbAll, dbGet, dbRun, logActivity);
+
 // ============================================
 // API ROUTES
 // ============================================
@@ -1152,7 +1577,21 @@ app.get('/api/roles', requireAuth, requirePermission('users', 'read'), (req, res
 // GUESTS
 app.get('/api/guests', requireAuth, async (req, res) => {
   try {
-    const guests = await dbAll('SELECT * FROM guests ORDER BY name');
+    // Query mejorada: incluye cama actual y booking activo
+    const guests = await dbAll(`
+      SELECT
+        g.*,
+        b.id as current_bed_id,
+        b.name as current_bed_name,
+        b.room as current_room,
+        bk.check_in,
+        bk.check_out,
+        bk.total as booking_total
+      FROM guests g
+      LEFT JOIN beds b ON b.guest_id = g.id AND b.status = 'occupied'
+      LEFT JOIN bookings bk ON bk.guest_id = g.id AND bk.bed_id = b.id AND bk.status = 'active'
+      ORDER BY g.name
+    `);
     res.json(guests);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1311,6 +1750,281 @@ app.get('/api/guests/stats', requireAuth, async (req, res) => {
   }
 });
 
+// GDPR ENDPOINTS (DEV3-12)
+
+/**
+ * GET /api/guests/:id/export-data
+ * Export all data related to a guest (GDPR Data Portability)
+ */
+app.get('/api/guests/:id/export-data', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get guest basic info
+    const guest = await dbGet('SELECT * FROM guests WHERE id = ?', [id]);
+    if (!guest) {
+      return res.status(404).json({ error: 'Guest not found' });
+    }
+
+    // Get all bookings
+    const bookings = await dbAll(`
+      SELECT b.*, bed.name as bed_name, bed.room
+      FROM bookings b
+      LEFT JOIN beds bed ON b.bed_id = bed.id
+      WHERE b.guest_id = ?
+      ORDER BY b.created_at DESC
+    `, [id]);
+
+    // Get all transactions
+    const transactions = await dbAll(`
+      SELECT t.*
+      FROM transactions t
+      JOIN bookings b ON t.booking_id = b.id
+      WHERE b.guest_id = ?
+      ORDER BY t.created_at DESC
+    `, [id]);
+
+    // Get all reviews
+    const reviews = await dbAll(`
+      SELECT * FROM guest_reviews
+      WHERE guest_id = ?
+      ORDER BY created_at DESC
+    `, [id]);
+
+    // Get activity log related to this guest
+    const activityLog = await dbAll(`
+      SELECT * FROM activity_log
+      WHERE entity_type = 'guest' AND entity_id = ?
+      ORDER BY created_at DESC
+      LIMIT 100
+    `, [id]);
+
+    // Get push subscriptions (if any)
+    const subscriptions = await dbAll(`
+      SELECT endpoint, created_at FROM push_subscriptions
+      WHERE user_id = ?
+    `, [id]);
+
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      dataSubject: {
+        id: guest.id,
+        name: guest.name,
+        email: guest.email,
+        phone: guest.phone,
+        document: guest.document,
+        nationality: guest.nationality,
+        createdAt: guest.created_at
+      },
+      bookings: bookings.map(b => ({
+        id: b.id,
+        bedName: b.bed_name,
+        room: b.room,
+        checkIn: b.check_in,
+        checkOut: b.check_out,
+        nights: b.nights,
+        total: b.total,
+        status: b.status,
+        source: b.source,
+        notes: b.notes,
+        createdAt: b.created_at
+      })),
+      transactions: transactions.map(t => ({
+        id: t.id,
+        type: t.type,
+        amount: t.amount,
+        paymentMethod: t.payment_method,
+        description: t.description,
+        createdAt: t.created_at
+      })),
+      reviews: reviews.map(r => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        staffResponse: r.staff_response,
+        createdAt: r.created_at
+      })),
+      activityLog: activityLog.map(a => ({
+        action: a.action_type,
+        description: a.description,
+        createdAt: a.created_at
+      })),
+      pushSubscriptions: subscriptions.length,
+      metadata: {
+        totalBookings: bookings.length,
+        totalTransactions: transactions.length,
+        totalSpent: transactions.filter(t => t.type === 'payment').reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0),
+        firstVisit: bookings.length > 0 ? bookings[bookings.length - 1].check_in : null,
+        lastVisit: bookings.length > 0 ? bookings[0].check_in : null
+      }
+    };
+
+    // Log the export
+    await dbRun(`
+      INSERT INTO activity_log (action_type, module, description, user_id, entity_type, entity_id, ip_address)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, ['gdpr_export', 'guests', `Data export for guest: ${guest.name}`, req.user?.id, 'guest', id, req.ip]);
+
+    res.json({
+      success: true,
+      format: 'JSON',
+      data: exportData
+    });
+  } catch (err) {
+    logger.error('GDPR export error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * DELETE /api/guests/:id/anonymize
+ * Anonymize guest data (GDPR Right to Erasure)
+ * Preserves booking records for business reporting but removes PII
+ */
+app.delete('/api/guests/:id/anonymize', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if user has admin role
+    if (req.user?.role !== 'admin' && req.user?.role !== 'administrador') {
+      return res.status(403).json({ error: 'Admin access required for anonymization' });
+    }
+
+    // Get guest info for logging
+    const guest = await dbGet('SELECT * FROM guests WHERE id = ?', [id]);
+    if (!guest) {
+      return res.status(404).json({ error: 'Guest not found' });
+    }
+
+    // Check for active bookings
+    const activeBooking = await dbGet(`
+      SELECT id FROM bookings
+      WHERE guest_id = ? AND status IN ('confirmed', 'checked_in', 'pending')
+    `, [id]);
+
+    if (activeBooking) {
+      return res.status(400).json({
+        error: 'Cannot anonymize guest with active bookings',
+        activeBookingId: activeBooking.id
+      });
+    }
+
+    // Generate anonymous identifier
+    const anonymousId = `ANON-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Anonymize guest record
+    await dbRun(`
+      UPDATE guests
+      SET name = ?,
+          email = NULL,
+          phone = NULL,
+          document = ?,
+          nationality = NULL,
+          notes = 'Data anonymized per GDPR request'
+      WHERE id = ?
+    `, [`Anonymous Guest (${anonymousId})`, anonymousId, id]);
+
+    // Anonymize booking notes that might contain PII
+    await dbRun(`
+      UPDATE bookings
+      SET notes = CASE WHEN notes IS NOT NULL THEN '[Anonymized]' ELSE NULL END
+      WHERE guest_id = ?
+    `, [id]);
+
+    // Remove from reviews (keep rating for stats, remove personal comments)
+    await dbRun(`
+      UPDATE guest_reviews
+      SET comment = '[Removed per GDPR request]'
+      WHERE guest_id = ?
+    `, [id]);
+
+    // Delete push subscriptions
+    await dbRun(`DELETE FROM push_subscriptions WHERE user_id = ?`, [id]);
+
+    // Log the anonymization
+    await dbRun(`
+      INSERT INTO activity_log (action_type, module, description, user_id, entity_type, entity_id, ip_address, details)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      'gdpr_anonymize',
+      'guests',
+      `Guest data anonymized: ${guest.name} -> ${anonymousId}`,
+      req.user?.id,
+      'guest',
+      id,
+      req.ip,
+      JSON.stringify({
+        originalName: guest.name,
+        originalEmail: guest.email,
+        anonymousId,
+        reason: req.body?.reason || 'GDPR request'
+      })
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Guest data has been anonymized',
+      anonymousId,
+      details: {
+        guestRecordAnonymized: true,
+        bookingNotesCleared: true,
+        reviewsAnonymized: true,
+        pushSubscriptionsDeleted: true
+      }
+    });
+  } catch (err) {
+    logger.error('GDPR anonymize error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/gdpr/retention-policy
+ * Get data retention policy information
+ */
+app.get('/api/gdpr/retention-policy', requireAuth, async (req, res) => {
+  res.json({
+    success: true,
+    policy: {
+      guestData: {
+        retentionPeriod: '3 years after last checkout',
+        legalBasis: 'Contractual obligation and legitimate interest',
+        automaticDeletion: false
+      },
+      bookingRecords: {
+        retentionPeriod: '7 years (tax/accounting requirements)',
+        legalBasis: 'Legal obligation',
+        automaticDeletion: false
+      },
+      transactionRecords: {
+        retentionPeriod: '7 years (tax/accounting requirements)',
+        legalBasis: 'Legal obligation',
+        automaticDeletion: false
+      },
+      activityLogs: {
+        retentionPeriod: '2 years',
+        legalBasis: 'Legitimate interest (security)',
+        automaticDeletion: true
+      },
+      reviews: {
+        retentionPeriod: 'Until deletion request',
+        legalBasis: 'Consent',
+        automaticDeletion: false
+      }
+    },
+    dataSubjectRights: {
+      access: 'GET /api/guests/:id/export-data',
+      rectification: 'PUT /api/guests/:id',
+      erasure: 'DELETE /api/guests/:id/anonymize',
+      portability: 'GET /api/guests/:id/export-data (JSON format)'
+    },
+    contact: {
+      dataController: 'Almanik PMS',
+      email: process.env.GDPR_CONTACT_EMAIL || 'privacy@example.com'
+    }
+  });
+});
+
 // BEDS
 app.get('/api/beds', requireAuth, async (req, res) => {
   try {
@@ -1377,15 +2091,15 @@ app.post('/api/beds', requireAuth, async (req, res) => {
 app.put('/api/beds/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, room, status } = req.body;
+    const { name, price, room, status, notes } = req.body;
 
     if (!name || !price) {
       return res.status(400).json({ error: 'Name and price are required' });
     }
 
     await dbRun(
-      'UPDATE beds SET name = ?, price = ?, room = ?, status = ? WHERE id = ?',
-      [name, parseFloat(price), room, status || 'clean', id]
+      'UPDATE beds SET name = ?, price = ?, room = ?, status = ?, notes = ? WHERE id = ?',
+      [name, parseFloat(price), room, status || 'clean', notes || null, id]
     );
 
     res.json({ success: true, message: 'Bed updated successfully' });
@@ -1421,18 +2135,40 @@ app.delete('/api/beds/:id', requireAuth, async (req, res) => {
 
 app.get('/api/beds/by-room', requireAuth, async (req, res) => {
   try {
+    // Query mejorada: incluye datos del booking activo y pagos
     const beds = await dbAll(`
       SELECT
         b.*,
         g.name as guest_name,
-        g.document as guest_document
+        g.document as guest_document,
+        g.phone as guest_phone,
+        g.email as guest_email,
+        bk.id as booking_id,
+        bk.check_in,
+        bk.check_out,
+        bk.nights,
+        bk.total as booking_total,
+        bk.status as booking_status,
+        COALESCE(
+          (SELECT SUM(amount) FROM transactions WHERE booking_id = bk.id AND type = 'payment'),
+          0
+        ) as amount_paid,
+        rg.name as reserved_guest_name
       FROM beds b
       LEFT JOIN guests g ON b.guest_id = g.id
+      LEFT JOIN bookings bk ON bk.bed_id = b.id AND bk.status = 'active'
+      LEFT JOIN guests rg ON b.reserved_for_guest_id = rg.id
       ORDER BY b.room, b.name
     `);
 
+    // Calcular saldo pendiente y agregar a cada cama
+    const bedsWithBalance = beds.map(bed => ({
+      ...bed,
+      amount_due: bed.booking_total ? (bed.booking_total - (bed.amount_paid || 0)) : 0
+    }));
+
     // Agrupar por habitación
-    const bedsByRoom = beds.reduce((acc, bed) => {
+    const bedsByRoom = bedsWithBalance.reduce((acc, bed) => {
       const room = bed.room || 'Sin Asignar';
       if (!acc[room]) {
         acc[room] = [];
@@ -1442,6 +2178,110 @@ app.get('/api/beds/by-room', requireAuth, async (req, res) => {
     }, {});
 
     res.json(bedsByRoom);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DASHBOARD OPERATIVO - Check-ins y Check-outs del día
+app.get('/api/dashboard/today', requireAuth, async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    // Check-outs programados para hoy
+    const checkoutsToday = await dbAll(`
+      SELECT
+        bk.id as booking_id,
+        bk.check_out,
+        bk.total,
+        b.name as bed_name,
+        b.room,
+        g.name as guest_name,
+        g.phone as guest_phone,
+        COALESCE(
+          (SELECT SUM(amount) FROM transactions WHERE booking_id = bk.id AND type = 'payment'),
+          0
+        ) as amount_paid
+      FROM bookings bk
+      JOIN beds b ON bk.bed_id = b.id
+      JOIN guests g ON bk.guest_id = g.id
+      WHERE bk.check_out = ? AND bk.status = 'active'
+      ORDER BY b.room, b.name
+    `, [today]);
+
+    // Check-ins programados para hoy (reservas que comienzan hoy)
+    const checkinsToday = await dbAll(`
+      SELECT
+        bk.id as booking_id,
+        bk.check_in,
+        bk.check_out,
+        bk.nights,
+        bk.total,
+        b.name as bed_name,
+        b.room,
+        g.name as guest_name,
+        g.phone as guest_phone
+      FROM bookings bk
+      JOIN beds b ON bk.bed_id = b.id
+      JOIN guests g ON bk.guest_id = g.id
+      WHERE bk.check_in = ? AND bk.status IN ('pending', 'confirmed')
+      ORDER BY b.room, b.name
+    `, [today]);
+
+    // Check-outs de mañana (preview)
+    const checkoutsTomorrow = await dbAll(`
+      SELECT
+        bk.id as booking_id,
+        bk.check_out,
+        b.name as bed_name,
+        b.room,
+        g.name as guest_name
+      FROM bookings bk
+      JOIN beds b ON bk.bed_id = b.id
+      JOIN guests g ON bk.guest_id = g.id
+      WHERE bk.check_out = ? AND bk.status = 'active'
+      ORDER BY b.room, b.name
+    `, [tomorrow]);
+
+    // Estadísticas de ocupación
+    const occupancyStats = await dbGet(`
+      SELECT
+        COUNT(*) as total_beds,
+        SUM(CASE WHEN status = 'occupied' THEN 1 ELSE 0 END) as occupied,
+        SUM(CASE WHEN status = 'clean' THEN 1 ELSE 0 END) as available,
+        SUM(CASE WHEN status = 'dirty' THEN 1 ELSE 0 END) as needs_cleaning,
+        SUM(CASE WHEN status = 'reserved' THEN 1 ELSE 0 END) as reserved,
+        SUM(CASE WHEN status = 'maintenance' THEN 1 ELSE 0 END) as maintenance
+      FROM beds
+    `);
+
+    // Ingresos del día
+    const todayRevenue = await dbGet(`
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM transactions
+      WHERE type = 'payment' AND DATE(created_at) = ?
+    `, [today]);
+
+    // Agregar saldo pendiente a checkouts
+    const checkoutsWithBalance = checkoutsToday.map(co => ({
+      ...co,
+      amount_due: co.total - (co.amount_paid || 0)
+    }));
+
+    res.json({
+      date: today,
+      checkouts_today: checkoutsWithBalance,
+      checkins_today: checkinsToday,
+      checkouts_tomorrow: checkoutsTomorrow,
+      occupancy: {
+        ...occupancyStats,
+        occupancy_rate: occupancyStats.total_beds > 0
+          ? Math.round((occupancyStats.occupied / occupancyStats.total_beds) * 100)
+          : 0
+      },
+      revenue_today: todayRevenue.total
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1990,15 +2830,106 @@ app.post('/api/products', requireAuth, async (req, res) => {
 app.put('/api/products/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, price, category, stock } = req.body;
+    const { name, price, category, stock, image_url } = req.body;
 
     await dbRun(
-      'UPDATE products SET name = ?, price = ?, category = ?, stock = ? WHERE id = ?',
-      [name, price, category, stock, id]
+      'UPDATE products SET name = ?, price = ?, category = ?, stock = ?, image_url = ? WHERE id = ?',
+      [name, price, category, stock, image_url || null, id]
     );
 
     const updatedProduct = await dbGet('SELECT * FROM products WHERE id = ?', [id]);
     res.json(updatedProduct);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Upload product image (base64)
+app.post('/api/products/:id/image', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { image } = req.body; // base64 image data
+
+    if (!image) {
+      return res.status(400).json({ error: 'Image data required' });
+    }
+
+    // Validate product exists
+    const product = await dbGet('SELECT id FROM products WHERE id = ?', [id]);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Extract base64 data and file type
+    const matches = image.match(/^data:image\/(png|jpeg|jpg|gif|webp);base64,(.+)$/);
+    if (!matches) {
+      return res.status(400).json({ error: 'Invalid image format. Use base64 data URL' });
+    }
+
+    const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+    const base64Data = matches[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Validate file size (max 2MB)
+    if (buffer.length > 2 * 1024 * 1024) {
+      return res.status(400).json({ error: 'Image too large. Max 2MB' });
+    }
+
+    // Generate filename and save
+    const filename = `product_${id}_${Date.now()}.${ext}`;
+    const filepath = path.join(__dirname, '../public/uploads/products', filename);
+
+    // Ensure directory exists
+    const fs = require('fs');
+    const uploadDir = path.join(__dirname, '../public/uploads/products');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    // Delete old image if exists
+    const oldProduct = await dbGet('SELECT image_url FROM products WHERE id = ?', [id]);
+    if (oldProduct && oldProduct.image_url) {
+      const oldPath = path.join(__dirname, '../public', oldProduct.image_url);
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    // Save new image
+    fs.writeFileSync(filepath, buffer);
+
+    // Update product with image URL
+    const imageUrl = `/uploads/products/${filename}`;
+    await dbRun('UPDATE products SET image_url = ? WHERE id = ?', [imageUrl, id]);
+
+    const updatedProduct = await dbGet('SELECT * FROM products WHERE id = ?', [id]);
+    res.json({ success: true, image_url: imageUrl, product: updatedProduct });
+  } catch (err) {
+    console.error('Image upload error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete product image
+app.delete('/api/products/:id/image', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const fs = require('fs');
+
+    const product = await dbGet('SELECT image_url FROM products WHERE id = ?', [id]);
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    if (product.image_url) {
+      const imagePath = path.join(__dirname, '../public', product.image_url);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+
+    await dbRun('UPDATE products SET image_url = NULL WHERE id = ?', [id]);
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -2284,6 +3215,490 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ============================================
+// FASE 1: NUEVOS ENDPOINTS - ARQUITECTURA COHERENTE
+// ============================================
+
+/**
+ * GET /api/dashboard/occupancy
+ * RESPONDE: "¿Quién está hospedado actualmente?"
+ * Retorna lista de huéspedes con booking activo (checked_in o active)
+ */
+app.get('/api/dashboard/occupancy', requireAuth, async (req, res) => {
+  try {
+    const currentGuests = await dbAll(`
+      SELECT
+        b.id as booking_id,
+        b.confirmation_code,
+        b.check_in,
+        b.check_out,
+        b.nights,
+        b.total as total_amount,
+        b.status as booking_status,
+        b.checked_in_at,
+        g.id as guest_id,
+        g.name as guest_name,
+        g.document as guest_document,
+        g.phone as guest_phone,
+        g.email as guest_email,
+        bd.id as bed_id,
+        bd.name as bed_name,
+        bd.room as room_name,
+        bd.price as price_per_night,
+        COALESCE(
+          (SELECT SUM(amount) FROM transactions WHERE booking_id = b.id AND type = 'payment'),
+          0
+        ) as amount_paid,
+        b.total - COALESCE(
+          (SELECT SUM(amount) FROM transactions WHERE booking_id = b.id AND type = 'payment'),
+          0
+        ) as balance
+      FROM bookings b
+      JOIN guests g ON b.guest_id = g.id
+      JOIN beds bd ON b.bed_id = bd.id
+      WHERE b.status IN ('active', 'checked_in')
+      ORDER BY bd.room, bd.name
+    `);
+
+    // Calcular estadísticas
+    const totalBeds = await dbGet('SELECT COUNT(*) as count FROM beds');
+    const occupiedCount = currentGuests.length;
+    const totalBalance = currentGuests.reduce((sum, g) => sum + (g.balance || 0), 0);
+
+    res.json({
+      success: true,
+      count: occupiedCount,
+      total_beds: totalBeds.count,
+      occupancy_rate: totalBeds.count > 0
+        ? Math.round((occupiedCount / totalBeds.count) * 100)
+        : 0,
+      total_pending_balance: totalBalance,
+      guests: currentGuests
+    });
+  } catch (err) {
+    logger.error('Error fetching occupancy:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/search
+ * Búsqueda universal: huésped, reserva, o cama
+ */
+app.get('/api/search', requireAuth, async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || q.length < 2) {
+      return res.status(400).json({ error: 'Query must be at least 2 characters' });
+    }
+
+    const searchTerm = `%${q}%`;
+
+    // Buscar huéspedes
+    const guests = await dbAll(`
+      SELECT
+        'guest' as type,
+        g.id,
+        g.name,
+        g.document,
+        g.phone,
+        g.email,
+        (SELECT bd.name FROM beds bd
+         JOIN bookings bk ON bd.id = bk.bed_id
+         WHERE bk.guest_id = g.id AND bk.status IN ('active', 'checked_in')
+         LIMIT 1) as current_bed
+      FROM guests g
+      WHERE g.name LIKE ? OR g.document LIKE ? OR g.email LIKE ? OR g.phone LIKE ?
+      LIMIT 10
+    `, [searchTerm, searchTerm, searchTerm, searchTerm]);
+
+    // Buscar reservas por código de confirmación
+    const bookings = await dbAll(`
+      SELECT
+        'booking' as type,
+        b.id,
+        b.confirmation_code,
+        b.check_in,
+        b.check_out,
+        b.status,
+        g.name as guest_name,
+        bd.name as bed_name
+      FROM bookings b
+      JOIN guests g ON b.guest_id = g.id
+      JOIN beds bd ON b.bed_id = bd.id
+      WHERE b.confirmation_code LIKE ? OR g.name LIKE ?
+      ORDER BY b.created_at DESC
+      LIMIT 10
+    `, [searchTerm, searchTerm]);
+
+    // Buscar camas
+    const beds = await dbAll(`
+      SELECT
+        'bed' as type,
+        bd.id,
+        bd.name,
+        bd.room,
+        bd.status,
+        bd.price,
+        g.name as guest_name
+      FROM beds bd
+      LEFT JOIN guests g ON bd.guest_id = g.id
+      WHERE bd.name LIKE ? OR bd.room LIKE ?
+      LIMIT 10
+    `, [searchTerm, searchTerm]);
+
+    res.json({
+      success: true,
+      query: q,
+      results: {
+        guests,
+        bookings,
+        beds
+      },
+      total: guests.length + bookings.length + beds.length
+    });
+  } catch (err) {
+    logger.error('Error in search:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/bookings/:id/do-checkin
+ * Check-in UNIFICADO - Un solo endpoint para hacer check-in
+ */
+app.post('/api/bookings/:id/do-checkin', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { payment_amount, payment_method } = req.body;
+
+    // 1. Obtener booking con validaciones
+    const booking = await dbGet(`
+      SELECT
+        b.*,
+        g.name as guest_name,
+        g.document as guest_document,
+        bd.name as bed_name,
+        bd.status as bed_status,
+        bd.room as room_name
+      FROM bookings b
+      JOIN guests g ON b.guest_id = g.id
+      JOIN beds bd ON b.bed_id = bd.id
+      WHERE b.id = ?
+    `, [id]);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Reserva no encontrada'
+      });
+    }
+
+    // Validar estado del booking
+    if (!['pending', 'confirmed'].includes(booking.status)) {
+      return res.status(400).json({
+        success: false,
+        error: `No se puede hacer check-in a una reserva con estado: ${booking.status}`
+      });
+    }
+
+    // 2. Validar estado de cama
+    if (!['clean', 'reserved'].includes(booking.bed_status)) {
+      return res.status(400).json({
+        success: false,
+        error: `La cama no está lista. Estado actual: ${booking.bed_status}`
+      });
+    }
+
+    // 3. Actualizar booking a checked_in/active
+    await dbRun(`
+      UPDATE bookings
+      SET status = 'active',
+          checked_in_at = datetime('now'),
+          updated_at = datetime('now')
+      WHERE id = ?
+    `, [id]);
+
+    // 4. Actualizar cama a occupied
+    await dbRun(`
+      UPDATE beds
+      SET status = 'occupied',
+          guest_id = ?
+      WHERE id = ?
+    `, [booking.guest_id, booking.bed_id]);
+
+    // 5. Registrar pago si se proporciona
+    if (payment_amount && payment_amount > 0) {
+      await dbRun(`
+        INSERT INTO transactions (booking_id, type, description, amount, method, created_at)
+        VALUES (?, 'payment', 'Pago al check-in', ?, ?, datetime('now'))
+      `, [id, payment_amount, payment_method || 'cash']);
+    }
+
+    // 6. Log de actividad
+    await logActivity(
+      'checkin',
+      'bookings',
+      `Check-in: ${booking.guest_name} → Cama ${booking.bed_name}`,
+      null, id, 'booking'
+    );
+
+    // 7. Obtener booking actualizado con balance
+    const result = await dbGet(`
+      SELECT
+        b.*,
+        g.name as guest_name,
+        bd.name as bed_name,
+        bd.room as room_name,
+        COALESCE(
+          (SELECT SUM(amount) FROM transactions WHERE booking_id = b.id AND type = 'payment'),
+          0
+        ) as amount_paid,
+        b.total - COALESCE(
+          (SELECT SUM(amount) FROM transactions WHERE booking_id = b.id AND type = 'payment'),
+          0
+        ) as balance
+      FROM bookings b
+      JOIN guests g ON b.guest_id = g.id
+      JOIN beds bd ON b.bed_id = bd.id
+      WHERE b.id = ?
+    `, [id]);
+
+    res.json({
+      success: true,
+      message: `Check-in exitoso. ${booking.guest_name} está ahora en ${booking.bed_name}`,
+      booking: result
+    });
+
+  } catch (err) {
+    logger.error('Error in check-in:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error al procesar check-in: ' + err.message
+    });
+  }
+});
+
+/**
+ * POST /api/bookings/:id/do-checkout
+ * Check-out UNIFICADO
+ */
+app.post('/api/bookings/:id/do-checkout', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { payment_amount, payment_method } = req.body;
+
+    // 1. Obtener booking
+    const booking = await dbGet(`
+      SELECT
+        b.*,
+        g.name as guest_name,
+        bd.id as bed_id,
+        bd.name as bed_name,
+        COALESCE(
+          (SELECT SUM(amount) FROM transactions WHERE booking_id = b.id AND type = 'payment'),
+          0
+        ) as amount_paid
+      FROM bookings b
+      JOIN guests g ON b.guest_id = g.id
+      JOIN beds bd ON b.bed_id = bd.id
+      WHERE b.id = ?
+    `, [id]);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Reserva no encontrada'
+      });
+    }
+
+    if (booking.status !== 'active') {
+      return res.status(400).json({
+        success: false,
+        error: `No se puede hacer check-out a una reserva con estado: ${booking.status}`
+      });
+    }
+
+    // 2. Registrar pago final si se proporciona
+    if (payment_amount && payment_amount > 0) {
+      await dbRun(`
+        INSERT INTO transactions (booking_id, type, description, amount, method, created_at)
+        VALUES (?, 'payment', 'Pago al check-out', ?, ?, datetime('now'))
+      `, [id, payment_amount, payment_method || 'cash']);
+    }
+
+    // 3. Completar booking
+    await dbRun(`
+      UPDATE bookings
+      SET status = 'completed',
+          checked_out_at = datetime('now'),
+          updated_at = datetime('now')
+      WHERE id = ?
+    `, [id]);
+
+    // 4. Marcar cama como dirty
+    await dbRun(`
+      UPDATE beds
+      SET status = 'dirty',
+          guest_id = NULL
+      WHERE id = ?
+    `, [booking.bed_id]);
+
+    // 5. Log de actividad
+    await logActivity(
+      'checkout',
+      'bookings',
+      `Check-out: ${booking.guest_name} de Cama ${booking.bed_name}`,
+      null, id, 'booking'
+    );
+
+    // 6. Calcular balance final
+    const finalPayments = booking.amount_paid + (payment_amount || 0);
+    const finalBalance = booking.total - finalPayments;
+
+    res.json({
+      success: true,
+      message: `Check-out completado. ${booking.guest_name} ha dejado ${booking.bed_name}`,
+      summary: {
+        guest_name: booking.guest_name,
+        bed_name: booking.bed_name,
+        total_charged: booking.total,
+        total_paid: finalPayments,
+        final_balance: finalBalance
+      }
+    });
+
+  } catch (err) {
+    logger.error('Error in check-out:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error al procesar check-out: ' + err.message
+    });
+  }
+});
+
+/**
+ * POST /api/walkin
+ * Walk-in completo: Crear huésped + booking + check-in en un solo paso
+ */
+app.post('/api/walkin', requireAuth, async (req, res) => {
+  try {
+    const {
+      guest_name,
+      guest_document,
+      guest_email,
+      guest_phone,
+      guest_nationality,
+      bed_id,
+      check_in,
+      check_out,
+      payment_amount,
+      payment_method
+    } = req.body;
+
+    // Validaciones básicas
+    if (!guest_name || !guest_document || !bed_id || !check_in || !check_out) {
+      return res.status(400).json({
+        success: false,
+        error: 'Faltan campos requeridos: guest_name, guest_document, bed_id, check_in, check_out'
+      });
+    }
+
+    // 1. Verificar disponibilidad de cama
+    const bed = await dbGet('SELECT * FROM beds WHERE id = ? AND status = ?', [bed_id, 'clean']);
+    if (!bed) {
+      return res.status(400).json({
+        success: false,
+        error: 'La cama no está disponible'
+      });
+    }
+
+    // 2. Buscar o crear huésped
+    let guest = await dbGet('SELECT * FROM guests WHERE document = ?', [guest_document]);
+
+    if (!guest) {
+      const guestResult = await dbRun(`
+        INSERT INTO guests (name, document, email, phone, nationality, created_at)
+        VALUES (?, ?, ?, ?, ?, datetime('now'))
+      `, [guest_name, guest_document, guest_email || null, guest_phone || null, guest_nationality || 'Colombia']);
+
+      guest = { id: guestResult.id, name: guest_name, document: guest_document };
+    }
+
+    // 3. Calcular noches y total
+    const checkInDate = new Date(check_in);
+    const checkOutDate = new Date(check_out);
+    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+    const total = bed.price * nights;
+
+    // 4. Generar código de confirmación
+    const now = new Date();
+    const confirmationCode = `ALM-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+
+    // 5. Crear booking en estado active (ya es check-in)
+    const bookingResult = await dbRun(`
+      INSERT INTO bookings (
+        guest_id, bed_id, check_in, check_out, nights, total,
+        status, confirmation_code, source, checked_in_at, created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, 'active', ?, 'walkin', datetime('now'), datetime('now'))
+    `, [guest.id, bed_id, check_in, check_out, nights, total, confirmationCode]);
+
+    // 6. Actualizar cama
+    await dbRun(`
+      UPDATE beds SET status = 'occupied', guest_id = ? WHERE id = ?
+    `, [guest.id, bed_id]);
+
+    // 7. Crear cargo de habitación
+    await dbRun(`
+      INSERT INTO transactions (booking_id, type, description, amount, created_at)
+      VALUES (?, 'charge', ?, ?, datetime('now'))
+    `, [bookingResult.id, `Alojamiento - ${nights} noches`, total]);
+
+    // 8. Registrar pago si se proporciona
+    if (payment_amount && payment_amount > 0) {
+      await dbRun(`
+        INSERT INTO transactions (booking_id, type, description, amount, method, created_at)
+        VALUES (?, 'payment', 'Pago al check-in', ?, ?, datetime('now'))
+      `, [bookingResult.id, payment_amount, payment_method || 'cash']);
+    }
+
+    // 9. Log de actividad
+    await logActivity(
+      'walkin',
+      'bookings',
+      `Walk-in: ${guest.name} → Cama ${bed.name}`,
+      null, bookingResult.id, 'booking'
+    );
+
+    res.status(201).json({
+      success: true,
+      message: `Walk-in exitoso. ${guest.name} está ahora en ${bed.name}`,
+      booking: {
+        id: bookingResult.id,
+        confirmation_code: confirmationCode,
+        guest_name: guest.name,
+        bed_name: bed.name,
+        room: bed.room,
+        check_in,
+        check_out,
+        nights,
+        total,
+        amount_paid: payment_amount || 0,
+        balance: total - (payment_amount || 0)
+      }
+    });
+
+  } catch (err) {
+    logger.error('Error in walk-in:', err);
+    res.status(500).json({
+      success: false,
+      error: 'Error al procesar walk-in: ' + err.message
+    });
+  }
+});
+
 // For Vercel serverless deployment
 module.exports = app;
 
@@ -2300,6 +3715,9 @@ async function startServer() {
     const icalCron = new ICalSyncCron();
     icalCron.startCronJob();
 
+    // Start WhatsApp automation cron job (reminders every hour)
+    whatsappAutomation.start();
+
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
       logger.info(`🚀 Almanik PMS Production Server running on port ${PORT}`);
@@ -2311,6 +3729,7 @@ async function startServer() {
       logger.info('✅ Security: Helmet, Rate Limiting, CORS, Input Validation');
       logger.info('✅ Monitoring: Winston Logging, Sentry, Performance Tracking');
       logger.info('✅ iCal Sync: Running every 2 hours');
+      logger.info('✅ WhatsApp Automation: Running every hour (if configured)');
       logger.info('');
       logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info('');
