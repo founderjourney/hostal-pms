@@ -1169,8 +1169,10 @@ const auditModule = require('./modules/audit');
 const notificationsModule = require('./modules/notifications');
 const whatsappModule = require('./modules/whatsapp');
 const emailModule = require('./modules/email');
+const smsModule = require('./modules/sms');
 const ICalSyncCron = require('./cron/sync-ical');
 const whatsappAutomation = require('./cron/whatsapp-automation');
+const smsAutomation = require('./cron/sms-automation');
 
 // ============================================
 // MIDDLEWARES
@@ -1350,6 +1352,20 @@ app.use('/api/email', (req, res, next) => {
     next();
   });
 }, emailModule);
+
+// SMS module (Twilio integration)
+app.use('/api/sms', (req, res, next) => {
+  req.app.locals.db = dbAdapter;
+  // Status endpoint is public
+  if (req.path === '/status' && req.method === 'GET') {
+    return next();
+  }
+  // All other endpoints require authentication
+  requireAuth(req, res, () => {
+    req.session = req.user;
+    next();
+  });
+}, smsModule);
 
 // Reviews module (guest feedback system)
 // Public endpoints: GET /public, GET /token/:token, POST / (with token)
@@ -3718,6 +3734,9 @@ async function startServer() {
     // Start WhatsApp automation cron job (reminders every hour)
     whatsappAutomation.start();
 
+    // Start SMS automation cron job (check-in/checkout reminders)
+    smsAutomation.startCronJob(app);
+
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
       logger.info(`🚀 Almanik PMS Production Server running on port ${PORT}`);
@@ -3730,6 +3749,7 @@ async function startServer() {
       logger.info('✅ Monitoring: Winston Logging, Sentry, Performance Tracking');
       logger.info('✅ iCal Sync: Running every 2 hours');
       logger.info('✅ WhatsApp Automation: Running every hour (if configured)');
+      logger.info('✅ SMS Automation: Check-in 10AM, Checkout 8AM (if Twilio configured)');
       logger.info('');
       logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
       logger.info('');
