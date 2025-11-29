@@ -348,6 +348,9 @@ module.exports = stripe;
 - **DEV1-01** (2025-11-28): Creado `server/modules/payments.js` con Stripe config, endpoints create-intent, confirm. Creado `server/config/stripe.js`.
 - **DEV1-02** (2025-11-28): Implementados endpoints de pre-autorización: POST /pre-authorize (hold funds con capture_method: manual), POST /capture (captura fondos retenidos), POST /cancel-auth (libera fondos), GET /pre-auth/:reservation_id (consulta pre-auth activa). Incluye validación de pre-auth duplicados, logging de actividad, y manejo de estados Stripe.
 - **DEV1-03** (2025-11-28): Implementados cobros y reembolsos: POST /charge (cobro directo con captura inmediata), POST /refund (reembolsos totales/parciales), GET /payment/:payment_intent_id (detalles de pago). Mejorado GET /history/:reservation_id con cálculo de totales. Webhook mejorado con eventos: succeeded, failed, canceled, requires_action, refunded, dispute.created. Documentación completa en `docs/05-api/PAYMENTS-API.md`.
+- **DEV1-04** (2025-11-28): Integración Stripe con reservaciones. Endpoints: POST /api/reservations/:id/payment (iniciar pago), POST /api/reservations/:id/preauth (pre-autorización), POST /api/reservations/:id/capture (capturar pre-auth). Dashboard de pagos en frontend.
+- **DEV1-05** (2025-11-28): Configuración SendGrid. Creado `server/config/sendgrid.js` y `server/modules/email.js`. Endpoints: GET /status, POST /send, POST /send-bulk, POST /test, GET /history. Tabla emails para registro de envíos.
+- **DEV1-06** (2025-11-29): Templates de Email implementados. 4 templates profesionales: booking_confirmation (confirmación de reserva), checkin_reminder (recordatorio día anterior), receipt (recibo de pago), checkout_reminder (recordatorio check-out con link a review). Endpoints: GET /templates, GET /templates/:id, POST /send-template, POST /preview-template. Funciones helper exportadas: sendBookingConfirmation(), sendCheckoutReminder(). Templates con HTML responsive y versión texto.
 
 ---
 
@@ -516,28 +519,40 @@ module.exports = stripe;
 
 ## DEV2-07: REPORTES - Exportacion
 **Duracion:** 2 dias
-**Estado:** [ ] Pendiente
+**Estado:** [x] COMPLETADO (2025-11-29)
 **Depende de:** DEV2-06
 
-### Que hacer:
+### Implementado:
 ```
-1. Boton "Exportar PDF" para cada reporte
-2. Boton "Exportar Excel" para cada reporte
-3. Usar libreria jsPDF para PDF
-4. Usar libreria SheetJS para Excel
-5. Incluir logo y formato profesional
+1. Dropdown "Export" con 3 opciones (PDF, Excel, CSV)
+2. jsPDF + jspdf-autotable para PDF profesional multi-pagina
+3. SheetJS para Excel con 5 hojas (Financial, Occupancy, Revenue, Guests, YoY)
+4. CSV simple para compatibilidad
+5. Loading overlay durante generacion
+6. Nombres de archivo con fecha: almanik-report-YYYY-MM-DD.ext
 ```
 
-### Librerias:
-```html
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-```
+### Archivos modificados:
+- `public/reports-advanced.html` - Librerias CDN, botones export, estilos dropdown
+- `public/js/reports-advanced.js` - Funciones exportToPDF(), exportToExcel(), exportToCSV()
+
+### Features PDF:
+- Header con logo texto "ALMANIK PMS"
+- Periodo y fecha de generacion
+- 5 tablas con colores diferenciados
+- Paginacion automatica
+- Footer con numero de pagina
+
+### Features Excel:
+- 5 hojas: Financial Summary, Occupancy, Revenue, Guests, YoY Comparison
+- Columnas con ancho ajustado
+- Formato limpio para analisis
 
 ### Verificacion:
-- [ ] PDF se genera correctamente
-- [ ] Excel se genera correctamente
-- [ ] Formato profesional
+- [x] PDF se genera correctamente (multi-pagina, tablas)
+- [x] Excel se genera correctamente (5 hojas)
+- [x] CSV funciona como fallback
+- [x] Formato profesional
 
 ---
 
@@ -680,7 +695,7 @@ module.exports = stripe;
 | DEV2-04 | [x] COMPLETADO 2025-11-28 | 2 |
 | DEV2-05 | [x] COMPLETADO 2025-11-28 | 3 |
 | DEV2-06 | [x] COMPLETADO 2025-11-29 | 3-4 |
-| DEV2-07 | [ ] | 4 |
+| DEV2-07 | [x] COMPLETADO 2025-11-29 | 4 |
 | DEV2-08 | [ ] | 4 |
 | DEV2-09 | [ ] | 5 |
 | DEV2-10 | [ ] | 5 |
@@ -693,6 +708,7 @@ module.exports = stripe;
 - **DEV2-04** (2025-11-28): POS mejorado. Nueva pagina `public/pos.html` y `public/js/pos.js`. Grid de productos con iconos, tabs de categorias, busqueda con debounce, carrito interactivo, atajos de teclado (F1/F2/Ctrl+F/Esc), modal de confirmacion con calculadora de cambio, soporte mobile.
 - **DEV2-05** (2025-11-28): Imagenes de productos implementado. Campo image_url en tabla products, endpoints POST/DELETE para upload, preview en modal, grid con imagenes.
 - **DEV2-06** (2025-11-29): Graficos interactivos completos. Chart.js integrado, 4 graficos (ocupacion mensual, revenue semanal, distribucion huespedes, comparativo YoY). Endpoints backend corregidos: transaction_type en lugar de type, guest-distribution usa source de bookings.
+- **DEV2-07** (2025-11-29): Exportacion de reportes. jsPDF + jspdf-autotable para PDF multi-pagina con tablas. SheetJS para Excel con 5 hojas. CSV como fallback. Dropdown menu con 3 opciones. Loading overlay. Archivos: reports-advanced.html (librerias CDN, botones), reports-advanced.js (exportToPDF, exportToExcel, exportToCSV).
 
 ---
 
@@ -1435,8 +1451,9 @@ Bot: 📋 *Tu Reserva*
 
 ## DEV4-09: MULTI-PROPERTY - Modelo de Datos
 **Duracion:** 3 dias
-**Estado:** [ ] Pendiente
+**Estado:** [ ] FUTURO - ROADMAP v2.0
 **Depende de:** Nada (puede iniciar cuando quiera)
+**Nota:** Feature pospuesto para version futura. El sistema actual funciona para una propiedad.
 
 ### Que hacer:
 ```
@@ -1479,7 +1496,7 @@ ALTER TABLE guests ADD COLUMN property_id INTEGER REFERENCES properties(id);
 
 ## DEV4-10: MULTI-PROPERTY - Middleware
 **Duracion:** 2 dias
-**Estado:** [ ] Pendiente
+**Estado:** [ ] FUTURO - ROADMAP v2.0
 **Depende de:** DEV4-09
 
 ### Que hacer:
@@ -1520,7 +1537,7 @@ const propertyMiddleware = async (req, res, next) => {
 
 ## DEV4-11: MULTI-PROPERTY - UI Selector
 **Duracion:** 2 dias
-**Estado:** [ ] Pendiente
+**Estado:** [ ] FUTURO - ROADMAP v2.0
 **Depende de:** DEV4-10
 
 ### Que hacer:
@@ -1541,7 +1558,7 @@ const propertyMiddleware = async (req, res, next) => {
 
 ## DEV4-12: MULTI-PROPERTY - Dashboard Consolidado
 **Duracion:** 2 dias
-**Estado:** [ ] Pendiente
+**Estado:** [ ] FUTURO - ROADMAP v2.0
 **Depende de:** DEV4-11
 
 ### Que hacer:
@@ -1572,10 +1589,10 @@ const propertyMiddleware = async (req, res, next) => {
 | DEV4-06 | [x] COMPLETADO 2025-11-28 | 3-4 |
 | DEV4-07 | [x] COMPLETADO 2025-11-29 | 4 |
 | DEV4-08 | [x] COMPLETADO 2025-11-29 | 5 |
-| DEV4-09 | [ ] | 6 |
-| DEV4-10 | [ ] | 7 |
-| DEV4-11 | [ ] | 8 |
-| DEV4-12 | [ ] | 8-9 |
+| DEV4-09 | [ ] FUTURO v2.0 | - |
+| DEV4-10 | [ ] FUTURO v2.0 | - |
+| DEV4-11 | [ ] FUTURO v2.0 | - |
+| DEV4-12 | [ ] FUTURO v2.0 | - |
 
 ### DEV4 Progreso Detallado:
 - **DEV4-01** (2025-11-28): Creado `server/modules/reviews.js` con 8 endpoints (GET /, GET /public, GET /stats, GET /:id, GET /token/:token, POST /, POST /:id/respond, PUT /:id/visibility, POST /request/:bookingId). Creado `public/review.html` landing page con formulario de estrellas y categorias. Tablas guest_reviews y review_requests en DB.
@@ -1586,6 +1603,43 @@ const propertyMiddleware = async (req, res, next) => {
 - **DEV4-06** (2025-11-28): Automatizacion WhatsApp. Creado `server/migrate-whatsapp.js` (tablas whatsapp_messages, whatsapp_automation_log, columna opt_out). Creado `server/cron/whatsapp-automation.js` con triggers automaticos (check-in reminder, checkout reminder, review request).
 - **DEV4-07** (2025-11-29): Bot Basico WhatsApp. Actualizado `server/modules/whatsapp.js` v1.1.0 con processBotMessage(). Menu de 4 opciones (reserva, WiFi, recepcion, info hostal). Busqueda de reserva por telefono. Endpoints de configuracion del bot (GET/PUT /bot/config, POST /bot/toggle, POST /bot/test, GET /bot/stats). Endpoints de conversaciones (GET /conversations, GET /conversations/:number). Variables de entorno para configuracion (HOSTAL_NAME, WIFI_NETWORK, etc). Opt-out para huespedes.
 - **DEV4-08** (2025-11-29): Panel de Chat WhatsApp. Creado `public/whatsapp-chat.html` UI tipo WhatsApp Web con 3 columnas (conversaciones, mensajes, detalles). Creado `public/js/whatsapp-chat.js` con logica completa. Endpoints nuevos: POST assign, POST read, POST reply, GET unread-count. Features: lista conversaciones con busqueda, historial mensajes con separadores de fecha, respuestas rapidas predefinidas, asignacion a staff, toggle bot, modal nuevo mensaje, auto-refresh 10s. Service Worker actualizado a v7. Navegacion agregada en index.html.
+
+### DEV4 - RESUMEN COMPLETADO (2025-11-29):
+**8 de 8 tareas core completadas (100%)**
+
+| Modulo | Tareas | Estado |
+|--------|--------|--------|
+| Reviews | DEV4-01, 02, 03 | COMPLETADO |
+| WhatsApp | DEV4-04, 05, 06, 07, 08 | COMPLETADO |
+| Multi-Property | DEV4-09, 10, 11, 12 | FUTURO v2.0 |
+
+**Archivos creados/modificados por DEV4:**
+- `server/modules/reviews.js` - Sistema de reviews
+- `server/modules/whatsapp.js` - WhatsApp + Bot + Chat
+- `server/config/whatsapp.js` - Config Evolution API
+- `server/migrate-whatsapp.js` - Migraciones WhatsApp
+- `server/cron/whatsapp-automation.js` - Automatizaciones
+- `public/review.html` - Landing page reviews
+- `public/reviews-dashboard.html` - Dashboard reviews
+- `public/reviews-widget.html` - Widget publico
+- `public/whatsapp-chat.html` - Panel de chat
+- `public/js/reviews-dashboard.js`
+- `public/js/whatsapp-chat.js`
+- `docs/05-api/REVIEWS-API.md`
+- `docs/05-api/WHATSAPP-API.md`
+
+---
+
+# ROADMAP FUTURO (v2.0)
+
+Las siguientes features estan planificadas para versiones futuras:
+
+| Feature | Descripcion | Prioridad |
+|---------|-------------|-----------|
+| Multi-Property | Soporte para multiples propiedades | Media |
+| Booking.com Sync | Sincronizacion con OTAs | Alta |
+| Twilio SMS | Mensajes SMS automaticos | Baja |
+| Mobile App | App nativa iOS/Android | Baja |
 
 ---
 

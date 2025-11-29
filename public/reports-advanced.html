@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Reports - Almanik PMS</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="manifest" href="/manifest.json">
     <style>
@@ -181,6 +186,100 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-pdf {
+            background: #e74c3c;
+        }
+
+        .btn-excel {
+            background: #27ae60;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .export-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .export-dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: white;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .export-dropdown:hover .export-dropdown-content {
+            display: block;
+        }
+
+        .export-dropdown-content button {
+            width: 100%;
+            text-align: left;
+            border-radius: 0;
+            background: white;
+            color: var(--dark);
+            padding: 0.75rem 1rem;
+        }
+
+        .export-dropdown-content button:hover {
+            background: var(--light);
+        }
+
+        .export-dropdown-content button i {
+            margin-right: 0.5rem;
+            width: 20px;
+        }
+
+        /* Loading overlay */
+        .export-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .export-loading.active {
+            display: flex;
+        }
+
+        .export-loading-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .export-loading-content i {
+            font-size: 2rem;
+            color: var(--secondary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -200,10 +299,26 @@
                 <input type="date" id="start-date">
                 <span>to</span>
                 <input type="date" id="end-date">
-                <button onclick="loadFinancials()">Update Report</button>
-                <button onclick="exportReport()" style="background: var(--success); margin-left: auto;">
-                    <i class="fas fa-file-csv"></i> Export CSV
-                </button>
+                <button onclick="loadFinancials()"><i class="fas fa-sync-alt"></i> Update</button>
+
+                <div class="export-buttons">
+                    <div class="export-dropdown">
+                        <button style="background: var(--dark);">
+                            <i class="fas fa-download"></i> Export <i class="fas fa-caret-down"></i>
+                        </button>
+                        <div class="export-dropdown-content">
+                            <button onclick="exportToPDF()">
+                                <i class="fas fa-file-pdf" style="color: #e74c3c;"></i> Export PDF
+                            </button>
+                            <button onclick="exportToExcel()">
+                                <i class="fas fa-file-excel" style="color: #27ae60;"></i> Export Excel
+                            </button>
+                            <button onclick="exportToCSV()">
+                                <i class="fas fa-file-csv" style="color: #3498db;"></i> Export CSV
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -253,6 +368,58 @@
             <div class="chart-container">
                 <canvas id="forecastChart"></canvas>
             </div>
+        </div>
+
+        <!-- Monthly Occupancy Chart (BAR) -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Ocupacion Mensual</div>
+                <i class="fas fa-chart-bar text-secondary"></i>
+            </div>
+            <div class="chart-container">
+                <canvas id="occupancyBarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Weekly Revenue Chart (LINE) -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Ingresos por Semana</div>
+                <i class="fas fa-chart-line text-success"></i>
+            </div>
+            <div class="chart-container">
+                <canvas id="revenueLineChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Guest Distribution Chart (PIE) -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Tipo de Huesped</div>
+                <i class="fas fa-chart-pie text-accent"></i>
+            </div>
+            <div class="chart-container">
+                <canvas id="guestPieChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Year-over-Year Comparison (LINE) -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Comparativo Anual</div>
+                <i class="fas fa-balance-scale text-warning"></i>
+            </div>
+            <div class="chart-container">
+                <canvas id="yoyComparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="export-loading" id="exportLoading">
+        <div class="export-loading-content">
+            <i class="fas fa-spinner"></i>
+            <p id="exportLoadingText">Generating export...</p>
         </div>
     </div>
 
