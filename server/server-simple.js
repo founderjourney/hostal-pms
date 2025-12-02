@@ -3911,27 +3911,47 @@ app.post('/api/walkin', requireAuth, async (req, res) => {
   }
 });
 
+// Initialize database connection (lazy, on first request)
+let dbInitialized = false;
+async function ensureDbConnection() {
+  if (!dbInitialized) {
+    try {
+      await dbAdapter.connect();
+      await initializeDatabase();
+      dbInitialized = true;
+      console.log('🗄️ Database initialized successfully');
+    } catch (error) {
+      console.error('❌ Database initialization failed:', error.message);
+      throw error;
+    }
+  }
+}
+
+// Middleware to ensure DB is connected before handling requests
+app.use(async (req, res, next) => {
+  try {
+    await ensureDbConnection();
+    next();
+  } catch (error) {
+    res.status(503).json({ error: 'Database connection failed', message: error.message });
+  }
+});
+
 // For Vercel serverless deployment
 module.exports = app;
 
-// Initialize database and start server
+// Initialize database and start server (local development only)
 async function startServer() {
   try {
-    await dbAdapter.connect();
-    console.log('🗄️ Database connected successfully');
+    await ensureDbConnection();
 
-    // Initialize database with tables and demo data
-    await initializeDatabase();
-
-    // Start iCal sync cron job (OTA synchronization every 2 hours)
-    const icalCron = new ICalSyncCron();
-    icalCron.startCronJob();
-
-    // Start WhatsApp automation cron job (reminders every hour)
-    whatsappAutomation.start();
-
-    // Start SMS automation cron job (check-in/checkout reminders)
-    smsAutomation.startCronJob(app);
+    // Start cron jobs only in local development (not in serverless)
+    if (!process.env.VERCEL) {
+      const icalCron = new ICalSyncCron();
+      icalCron.startCronJob();
+      whatsappAutomation.start();
+      smsAutomation.startCronJob(app);
+    }
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
@@ -3940,15 +3960,7 @@ async function startServer() {
       logger.info(`🔧 API: http://localhost:${PORT}/api`);
       logger.info(`🩺 Health Check: http://localhost:${PORT}/health`);
       logger.info(`🔑 Login: admin / [check .env ADMIN_PASSWORD]`);
-      logger.info('');
-      logger.info('✅ Security: Helmet, Rate Limiting, CORS, Input Validation');
-      logger.info('✅ Monitoring: Winston Logging, Sentry, Performance Tracking');
-      logger.info('✅ iCal Sync: Running every 2 hours');
-      logger.info('✅ WhatsApp Automation: Running every hour (if configured)');
-      logger.info('✅ SMS Automation: Check-in 10AM, Checkout 8AM (if Twilio configured)');
-      logger.info('');
       logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info('');
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
