@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/logs/.1d41769cd0114f7589cc19355a175f6534abf241-audit.json",
+    "files": [
+        {
+            "date": 1764706085348,
+            "name": "/home/us4rthink13/Documents/00_ORGANIZED/08_PMS-Vivi/almanik-pms-viajero/logs/http-2025-12-02.log",
+            "hash": "bb2eec67b59a7a3d0ec74b84acee360747a9410eaf80fba2b1e77dd21544898f"
+        }
+    ],
+    "hashType": "sha256"
+}

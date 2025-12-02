@@ -564,7 +564,7 @@ async function createDemoData() {
 }
 
 // AUTH SYSTEM WITH ROLES
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const activeSessions = new Map(); // Store session data
 
 // Initialize demo users
