@@ -2303,6 +2303,202 @@ app.get('/api/dashboard/today', requireAuth, async (req, res) => {
   }
 });
 
+// ============================================
+// DASHBOARD KPI WIDGETS - DEV2-10
+// ============================================
+app.get('/api/dashboard/kpi', requireAuth, async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    // ===== OCCUPANCY KPI =====
+    const occupancyStats = await dbGet(`
+      SELECT
+        COUNT(*) as total_beds,
+        SUM(CASE WHEN status = 'occupied' THEN 1 ELSE 0 END) as occupied,
+        SUM(CASE WHEN status = 'clean' THEN 1 ELSE 0 END) as available,
+        SUM(CASE WHEN status = 'dirty' THEN 1 ELSE 0 END) as dirty
+      FROM beds
+    `);
+
+    // Yesterday's occupancy (from activity_log if available, otherwise estimate)
+    const yesterdayOccupancy = await dbGet(`
+      SELECT COUNT(DISTINCT bed_id) as occupied
+      FROM bookings
+      WHERE status = 'active'
+        AND check_in <= ? AND check_out > ?
+    `, [yesterday, yesterday]) || { occupied: 0 };
+
+    const occupancyRate = occupancyStats.total_beds > 0
+      ? Math.round((occupancyStats.occupied / occupancyStats.total_beds) * 100)
+      : 0;
+
+    const yesterdayRate = occupancyStats.total_beds > 0
+      ? Math.round((yesterdayOccupancy.occupied / occupancyStats.total_beds) * 100)
+      : 0;
+
+    // ===== REVENUE KPI =====
+    const todayRevenue = await dbGet(`
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM transactions
+      WHERE type IN ('payment', 'sale', 'tour_sale')
+        AND DATE(created_at) = ?
+    `, [today]);
+
+    const yesterdayRevenue = await dbGet(`
+      SELECT COALESCE(SUM(amount), 0) as total
+      FROM transactions
+      WHERE type IN ('payment', 'sale', 'tour_sale')
+        AND DATE(created_at) = ?
+    `, [yesterday]);
+
+    // ===== CHECK-INS PENDING KPI =====
+    const pendingCheckins = await dbAll(`
+      SELECT
+        bk.id,
+        bk.check_in,
+        g.name as guest_name,
+        b.name as bed_name
+      FROM bookings bk
+      JOIN beds b ON bk.bed_id = b.id
+      JOIN guests g ON bk.guest_id = g.id
+      WHERE bk.check_in = ? AND bk.status IN ('pending', 'confirmed')
+      ORDER BY g.name
+    `, [today]);
+
+    // ===== PENDING TASKS KPI =====
+    let pendingTasks = [];
+    try {
+      pendingTasks = await dbAll(`
+        SELECT id, title, priority, due_date, assigned_to
+        FROM tasks
+        WHERE status != 'completed'
+          AND (due_date <= ? OR due_date IS NULL)
+        ORDER BY
+          CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
+          due_date
+        LIMIT 10
+      `, [today]);
+    } catch (e) {
+      // tasks table may not exist
+      pendingTasks = [];
+    }
+
+    // ===== ALERTS KPI =====
+    const alerts = [];
+
+    // Beds needing cleaning
+    if (occupancyStats.dirty > 0) {
+      const dirtyBeds = await dbAll(`
+        SELECT name, room FROM beds WHERE status = 'dirty' LIMIT 5
+      `);
+      dirtyBeds.forEach(bed => {
+        alerts.push({
+          type: 'warning',
+          icon: 'fa-broom',
+          message: `Cama ${bed.name} necesita limpieza`,
+          action: 'beds'
+        });
+      });
+    }
+
+    // Unpaid bookings (active with balance due)
+    const unpaidBookings = await dbAll(`
+      SELECT
+        bk.id,
+        bk.total,
+        g.name as guest_name,
+        COALESCE((SELECT SUM(amount) FROM transactions WHERE booking_id = bk.id AND type = 'payment'), 0) as paid
+      FROM bookings bk
+      JOIN guests g ON bk.guest_id = g.id
+      WHERE bk.status = 'active'
+        AND bk.total > COALESCE((SELECT SUM(amount) FROM transactions WHERE booking_id = bk.id AND type = 'payment'), 0)
+      LIMIT 5
+    `);
+
+    unpaidBookings.forEach(booking => {
+      const balance = booking.total - booking.paid;
+      if (balance > 0) {
+        alerts.push({
+          type: 'danger',
+          icon: 'fa-dollar-sign',
+          message: `${booking.guest_name}: $${balance.toLocaleString()} pendiente`,
+          action: 'guests',
+          booking_id: booking.id
+        });
+      }
+    });
+
+    // Late checkouts (past checkout time, still active)
+    const now = new Date();
+    const checkoutHour = parseInt(process.env.CHECKOUT_TIME?.split(':')[0] || '11');
+    if (now.getHours() >= checkoutHour) {
+      const lateCheckouts = await dbAll(`
+        SELECT
+          bk.id,
+          g.name as guest_name,
+          b.name as bed_name
+        FROM bookings bk
+        JOIN beds b ON bk.bed_id = b.id
+        JOIN guests g ON bk.guest_id = g.id
+        WHERE bk.check_out = ? AND bk.status = 'active'
+        LIMIT 3
+      `, [today]);
+
+      lateCheckouts.forEach(booking => {
+        alerts.push({
+          type: 'info',
+          icon: 'fa-clock',
+          message: `Check-out tardío: ${booking.guest_name} (${booking.bed_name})`,
+          action: 'beds',
+          booking_id: booking.id
+        });
+      });
+    }
+
+    // ===== RESPONSE =====
+    res.json({
+      timestamp: new Date().toISOString(),
+
+      occupancy: {
+        rate: occupancyRate,
+        occupied: occupancyStats.occupied,
+        available: occupancyStats.available,
+        total: occupancyStats.total_beds,
+        vs_yesterday: occupancyRate - yesterdayRate,
+        yesterday_rate: yesterdayRate
+      },
+
+      revenue: {
+        today: todayRevenue.total || 0,
+        yesterday: yesterdayRevenue.total || 0,
+        vs_yesterday: yesterdayRevenue.total > 0
+          ? Math.round(((todayRevenue.total - yesterdayRevenue.total) / yesterdayRevenue.total) * 100)
+          : (todayRevenue.total > 0 ? 100 : 0),
+        formatted: `$${(todayRevenue.total || 0).toLocaleString()}`
+      },
+
+      checkins: {
+        count: pendingCheckins.length,
+        items: pendingCheckins.slice(0, 5)
+      },
+
+      tasks: {
+        count: pendingTasks.length,
+        items: pendingTasks.slice(0, 5)
+      },
+
+      alerts: {
+        count: alerts.length,
+        items: alerts
+      }
+    });
+  } catch (err) {
+    logger.error('KPI endpoint error', { error: err.message });
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // CHECK-IN
 app.post('/api/checkin', requireAuth, async (req, res) => {
   try {

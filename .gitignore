@@ -1,7 +1,39 @@
-.vercel
+# Dependencies
+node_modules/
+
+# Environment files
+.env
 .env*.local
 
-# Local development files
-server.log
+# Vercel
+.vercel
+
+# Logs
+logs/*.log
+logs/*.log.*
+logs/*.gz
+*.log
+
+# Database (development)
 server/almanik.db
+*.db
+
+# Coverage
 coverage/
+
+# Backups
+backups/
+
+# Temporary files
+*.tmp
+*.tmp.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

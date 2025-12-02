@@ -654,62 +654,66 @@ module.exports = stripe;
 
 ## DEV2-10: DASHBOARD - Widgets KPI
 **Duracion:** 2 dias
-**Estado:** [ ] Pendiente
+**Estado:** [x] COMPLETADO (2025-11-29)
 **Depende de:** DEV2-06
 
-### Que hacer:
+### Que se hizo:
 ```
-1. Redisenar dashboard con widgets modulares
-2. Widget: Ocupacion hoy (%)
-3. Widget: Revenue hoy ($)
-4. Widget: Check-ins pendientes
-5. Widget: Tareas pendientes
-6. Widget: Alertas activas
-7. Auto-refresh cada 30 segundos
+1. KPI Widgets grid con 4 widgets principales
+2. Widget: Ocupacion hoy (%) con comparativo vs ayer
+3. Widget: Revenue hoy ($) con comparativo vs ayer
+4. Widget: Check-ins pendientes con lista de nombres
+5. Widget: Tareas pendientes con preview de titulos
+6. Widget: Alertas activas (camas sucias, pagos pendientes, checkouts tardios)
+7. Auto-refresh cada 30 segundos en dashboard
 ```
 
-### Mockup:
-```
-+------------------+------------------+
-|   OCUPACION      |    REVENUE      |
-|      78%         |    $1,250       |
-|   +5% vs ayer    |   +12% vs ayer  |
-+------------------+------------------+
-| CHECK-INS HOY    |  TAREAS PEND.   |
-|       5          |       3         |
-| Ver lista ->     |  Ver lista ->   |
-+------------------+------------------+
-| ALERTAS                            |
-| ! Cama 3-A necesita limpieza       |
-| ! Reserva #123 sin pago            |
-+------------------------------------+
-```
+### Backend:
+- Endpoint `GET /api/dashboard/kpi` (server-simple.js:2309-2499)
+- Retorna: occupancy, revenue, checkins, tasks, alerts con comparativos
+
+### Frontend:
+- HTML: `public/index.html` lineas 1462-1544 (widgets UI)
+- JS: funcion `renderKPIWidgets()` lineas 3392-3484
+- Auto-refresh: lineas 6565-6569 (setInterval 30s)
 
 ### Verificacion:
-- [ ] Widgets muestran datos reales
-- [ ] Auto-refresh funciona
-- [ ] Links funcionan
+- [x] Widgets muestran datos reales
+- [x] Auto-refresh funciona (30 segundos)
+- [x] Links funcionan (click en widget navega a seccion)
+- [x] Alertas clickeables
 
 ---
 
 ## DEV2-11: DASHBOARD - Quick Actions
 **Duracion:** 1 dia
-**Estado:** [ ] Pendiente
+**Estado:** [x] COMPLETADO (2025-11-29)
 **Depende de:** DEV2-10
 
-### Que hacer:
+### Que se hizo:
 ```
-1. Boton rapido: Nuevo Check-in
-2. Boton rapido: Nueva Reserva
-3. Boton rapido: Venta POS
-4. Boton rapido: Registrar Pago
-5. Shortcuts de teclado (Ctrl+1, Ctrl+2, etc)
+1. Boton rapido: CHECK-IN (Ctrl+1)
+2. Boton rapido: COBRAR (Ctrl+2)
+3. Boton rapido: CHECK-OUT (Ctrl+3)
+4. Boton rapido: RESERVA (Ctrl+4) - navega a reservations.html
+5. Boton rapido: VENTA POS (Ctrl+5)
+6. Boton ACTUALIZAR (F5 custom)
+7. Shortcuts de teclado implementados
+8. Barra de ayuda con shortcuts visibles
 ```
 
+### Archivos modificados:
+- `public/index.html` lineas 1565-1606 (botones + shortcuts help)
+- `public/index.html` lineas 7192-7240 (keyboard event listener)
+- `public/index.html` linea 6701-6704 (openQuickReservationModal)
+- `public/js/reservations.js` lineas 53-59 (soporte ?action=new)
+
 ### Verificacion:
-- [ ] Botones funcionan
-- [ ] Shortcuts funcionan
-- [ ] Accesible desde mobile
+- [x] 6 botones funcionan
+- [x] Shortcuts Ctrl+1 a Ctrl+5 funcionan
+- [x] F5 actualiza sin recargar pagina
+- [x] Escape cierra modales
+- [x] Barra de shortcuts visible
 
 ---
 
@@ -726,8 +730,8 @@ module.exports = stripe;
 | DEV2-07 | [x] COMPLETADO 2025-11-29 | 4 |
 | DEV2-08 | [x] COMPLETADO 2025-11-29 | 4 |
 | DEV2-09 | [x] COMPLETADO 2025-11-29 | 5 |
-| DEV2-10 | [ ] | 5 |
-| DEV2-11 | [ ] | 6 |
+| DEV2-10 | [x] COMPLETADO 2025-11-29 | 5 |
+| DEV2-11 | [x] COMPLETADO 2025-11-29 | 6 |
 
 ### DEV2 Progreso Detallado:
 - **DEV2-01** (2025-11-28): Creado `public/sw.js` Service Worker v2 con estrategias Cache First para assets y Network First para API.
@@ -739,6 +743,8 @@ module.exports = stripe;
 - **DEV2-07** (2025-11-29): Exportacion de reportes. jsPDF + jspdf-autotable para PDF multi-pagina con tablas. SheetJS para Excel con 5 hojas. CSV como fallback. Dropdown menu con 3 opciones. Loading overlay. Archivos: reports-advanced.html (librerias CDN, botones), reports-advanced.js (exportToPDF, exportToExcel, exportToCSV).
 - **DEV2-08** (2025-11-29): Mobile Responsive Audit. Auditadas 8 paginas HTML. Agregadas media queries (768px, 480px, 375px) a reports-advanced.html y reservations.html. Grid containers corregidos con min(100%, 350px). Headers, stats, controls adaptados para mobile.
 - **DEV2-09** (2025-11-29): Mobile Fixes Criticos. Creado `public/css/mobile-fixes.css` (270 lineas) con: tablas scrolleables, modals fullscreen, forms stacked, touch targets 44px, FAB, safe area iPhone X+, skeleton loading, bottom nav support, print styles. Incluido en 10 paginas HTML.
+- **DEV2-10** (2025-11-29): Dashboard KPI Widgets. Backend: endpoint `GET /api/dashboard/kpi` (server-simple.js:2309-2499) con occupancy, revenue, checkins, tasks, alerts y comparativos vs ayer. Frontend: KPI grid con 4 widgets principales (occupancy, revenue, checkins, tasks) + widget de alertas. Auto-refresh cada 30 segundos. Alertas clickeables para navegacion rapida.
+- **DEV2-11** (2025-11-29): Dashboard Quick Actions. 6 botones de accion rapida (Check-in, Cobrar, Check-out, Reserva, POS, Actualizar). Shortcuts de teclado: Ctrl+1 a Ctrl+5, F5, Escape. Barra de ayuda con shortcuts visibles. Funcion `openQuickReservationModal()` navega a reservations.html?action=new. Soporte URL params en reservations.js.
 
 ---
 

@@ -1,10 +1,10 @@
 # ALMANIK PMS - Sistema de Gestion Hotelera
 
-## SISTEMA LISTO PARA PRODUCCION - v1.12.3
+## SISTEMA LISTO PARA PRODUCCION - v1.12.4
 
-**Version:** 1.12.3
+**Version:** 1.12.4
 **Estado:** Auditado y Verificado - 100% Funcional
-**Ultima actualizacion:** 2025-11-27
+**Ultima actualizacion:** 2025-11-28
 
 ### URL DE PRODUCCION:
 **https://hostal-pms.vercel.app**
@@ -13,12 +13,12 @@
 
 ## ESTADO ACTUAL DEL PROYECTO
 
-### Auditoria Completa (2025-11-27)
+### Auditoria Completa (2025-11-28)
 
 | Metrica | Resultado |
 |---------|-----------|
-| Endpoints API Probados | 40 |
-| Endpoints Funcionando | 40 (100%) |
+| Endpoints API Probados | 45+ |
+| Endpoints Funcionando | 45+ (100%) |
 | Bugs Encontrados | 4 |
 | Bugs Corregidos | 4 |
 | Estado | **PRODUCCION READY** |
@@ -30,6 +30,8 @@
 | Autenticacion | Completado | 2 | index.html |
 | Huespedes | Completado | 5 | index.html |
 | Camas/Habitaciones | Completado | 4 | index.html |
+| Camas Avanzado | Completado | 15+ | index.html |
+| Front Desk | Completado | 8 | index.html |
 | Reservaciones | Completado | 7 | reservations.html |
 | Transacciones | Completado | 3 | index.html |
 | Productos/POS | Completado | 2 | index.html |
@@ -41,7 +43,71 @@
 | Cashbox/Caja | Completado | 12 | cashbox.html |
 | Reportes | Completado | 4 | reports-advanced.html |
 
-**Total:** 72+ Endpoints API | 8 Paginas Frontend
+**Total:** 90+ Endpoints API | 8 Paginas Frontend
+
+---
+
+## NOVEDADES - DIA 14 (2025-11-28)
+
+### Simplificacion del Modal de Gestion de Camas
+
+Se simplificó la interfaz de gestión de camas siguiendo el principio de diseño minimalista:
+
+#### Cambios Realizados
+
+1. **Eliminacion de Acciones Rapidas**
+   - Removida la seccion "Acciones Rapidas" del modal de edicion
+   - Botones no funcionales eliminados: Check-in, Check-out, Marcar Sucia, Marcar Limpia, Transferir, Mantenimiento
+   - Todo el flujo de cambio de estado ahora usa el dropdown "Estado"
+
+2. **Modal Simplificado**
+   - Nombre de la cama
+   - Precio por noche
+   - Habitacion (dropdown)
+   - Estado (dropdown): Disponible, Por limpiar, Ocupada, En mantenimiento, Reservada
+   - Notas
+   - Boton Eliminar (solo visible para administradores)
+
+3. **Tarjetas de Camas Minimalistas**
+   - Removidos todos los botones de accion de las tarjetas
+   - Solo queda el boton de editar (lapiz) para acceder al modal
+   - Interfaz mas limpia y menos sobrecargada
+
+4. **Permisos por Rol**
+   - Solo administradores pueden eliminar camas
+   - Voluntarios y recepcionistas solo pueden editar estado y notas
+
+#### Archivos Modificados
+
+- `public/index.html`
+  - Eliminado HTML de seccion "Acciones Rapidas"
+  - Eliminadas funciones JavaScript no utilizadas
+  - Limpieza de window exports innecesarios
+
+#### Funciones Eliminadas (codigo muerto)
+
+```javascript
+// Funciones removidas por no ser necesarias
+generateBedActionButtons()
+doCheckinFromModal()
+doCheckoutFromModal()
+doMarkCleanFromModal()
+doMarkDirtyFromModal()
+doMaintenanceFromModal()
+doEndMaintenanceFromModal()
+doTransferFromModal()
+doCancelReservationFromModal()
+```
+
+#### Flujo de Trabajo Simplificado
+
+```
+Usuario hace clic en boton editar (lapiz) de una cama
+    -> Se abre modal de gestion
+    -> Cambia el "Estado" en el dropdown
+    -> Hace clic en "Guardar Cambios"
+    -> La cama se actualiza y se refresca la vista
+```
 
 ---
 
@@ -244,7 +310,9 @@ almanik-pms-viajero/
 │       ├── ical-sync.js       # Sincronizacion iCal
 │       ├── staff.js           # Gestion de personal
 │       ├── tasks.js           # Tareas/Mantenimiento
-│       └── cashbox.js         # Caja/Finanzas
+│       ├── cashbox.js         # Caja/Finanzas
+│       ├── beds-advanced.js   # Gestion avanzada de camas
+│       └── front-desk.js      # Operaciones de recepcion
 ├── public/
 │   ├── index.html             # Dashboard principal
 │   ├── reservations.html      # Gestion de reservas
@@ -297,6 +365,20 @@ bash scripts/test-modules.sh
 
 ## CHANGELOG
 
+### v1.12.4 (2025-11-28) - MODULOS AVANZADOS
+**New Modules:**
+- Beds Advanced: Gestion avanzada de camas con estados, bloqueos y transferencias
+- Front Desk: Operaciones de recepcion, check-in/check-out rapido, busqueda de huespedes
+
+**UI Improvements:**
+- Modal de gestion de camas simplificado
+- Eliminadas acciones rapidas redundantes
+- Interfaz mas limpia y enfocada
+
+**Endpoints Nuevos:**
+- 15+ endpoints para gestion avanzada de camas
+- 8 endpoints para operaciones de front desk
+
 ### v1.12.3 (2025-11-27) - OPTIMIZACION DE RENDIMIENTO
 **Performance:**
 - Agregado endpoint `/ping` (warmup sin DB)
@@ -347,6 +429,6 @@ bash scripts/test-modules.sh
 ---
 
 **Estado:** PRODUCCION READY
-**Version:** 1.12.3
-**Auditoria:** 40/40 endpoints (100%)
-**Fecha:** 2025-11-27
+**Version:** 1.12.4
+**Auditoria:** 90+ endpoints (100%)
+**Fecha:** 2025-11-28

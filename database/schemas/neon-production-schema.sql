@@ -445,6 +445,128 @@ CREATE TABLE activity_log (
 );
 
 -- ============================================
+-- NOTIFICATIONS & PRICING TABLES
+-- ============================================
+
+-- PUSH_SUBSCRIPTIONS: Suscripciones de push notifications
+CREATE TABLE push_subscriptions (
+  id SERIAL PRIMARY KEY,
+
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+
+  user_agent TEXT,
+  device_type VARCHAR(50) DEFAULT 'unknown',
+
+  is_active BOOLEAN DEFAULT true,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_used_at TIMESTAMP
+);
+
+-- NOTIFICATION_HISTORY: Historial de notificaciones enviadas
+CREATE TABLE notification_history (
+  id SERIAL PRIMARY KEY,
+
+  subscription_id INTEGER REFERENCES push_subscriptions(id) ON DELETE SET NULL,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+
+  title VARCHAR(255) NOT NULL,
+  body TEXT,
+  icon TEXT,
+  url TEXT,
+  data JSONB,
+
+  notification_type VARCHAR(50) DEFAULT 'general',
+
+  status VARCHAR(20) DEFAULT 'pending',
+  error_message TEXT,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  sent_at TIMESTAMP,
+  read_at TIMESTAMP
+);
+
+-- SEASONS: Temporadas para pricing dinamico
+CREATE TABLE seasons (
+  id SERIAL PRIMARY KEY,
+
+  name VARCHAR(100) NOT NULL,
+  season_type VARCHAR(20) NOT NULL DEFAULT 'medium',
+
+  start_month INTEGER NOT NULL CHECK (start_month BETWEEN 1 AND 12),
+  start_day INTEGER NOT NULL CHECK (start_day BETWEEN 1 AND 31),
+  end_month INTEGER NOT NULL CHECK (end_month BETWEEN 1 AND 12),
+  end_day INTEGER NOT NULL CHECK (end_day BETWEEN 1 AND 31),
+
+  price_modifier DECIMAL(5,2) DEFAULT 1.00,
+
+  description TEXT,
+
+  is_active BOOLEAN DEFAULT true,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- PRICING_RULES: Reglas de precios dinamicos
+CREATE TABLE pricing_rules (
+  id SERIAL PRIMARY KEY,
+
+  name VARCHAR(100) NOT NULL,
+  rule_type VARCHAR(50) NOT NULL DEFAULT 'modifier',
+
+  bed_type VARCHAR(50),
+  room_id INTEGER,
+  bed_id INTEGER REFERENCES beds(id) ON DELETE CASCADE,
+
+  day_of_week VARCHAR(20),
+  min_occupancy DECIMAL(5,2),
+  max_occupancy DECIMAL(5,2),
+  min_stay_nights INTEGER,
+  max_stay_nights INTEGER,
+  booking_window_days INTEGER,
+
+  modifier_type VARCHAR(20) DEFAULT 'percentage',
+  modifier_value DECIMAL(10,2) NOT NULL DEFAULT 0,
+
+  priority INTEGER DEFAULT 0,
+
+  valid_from DATE,
+  valid_until DATE,
+
+  is_active BOOLEAN DEFAULT true,
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- PRICE_HISTORY: Historial de precios aplicados
+CREATE TABLE price_history (
+  id SERIAL PRIMARY KEY,
+
+  booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
+  bed_id INTEGER REFERENCES beds(id) ON DELETE SET NULL,
+
+  price_date DATE NOT NULL,
+
+  base_price DECIMAL(10,2) NOT NULL,
+  final_price DECIMAL(10,2) NOT NULL,
+
+  rules_applied JSONB,
+
+  season_id INTEGER REFERENCES seasons(id) ON DELETE SET NULL,
+
+  occupancy_rate DECIMAL(5,2),
+
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
 -- INDEXES for Performance
 -- ============================================
 
@@ -519,6 +641,30 @@ CREATE INDEX idx_activity_log_user_id ON activity_log(user_id);
 CREATE INDEX idx_activity_log_module ON activity_log(module);
 CREATE INDEX idx_activity_log_created_at ON activity_log(created_at);
 
+-- Push Subscriptions
+CREATE INDEX idx_push_subscriptions_user ON push_subscriptions(user_id);
+CREATE INDEX idx_push_subscriptions_active ON push_subscriptions(is_active);
+
+-- Notification History
+CREATE INDEX idx_notification_history_user ON notification_history(user_id);
+CREATE INDEX idx_notification_history_type ON notification_history(notification_type);
+CREATE INDEX idx_notification_history_status ON notification_history(status);
+CREATE INDEX idx_notification_history_created ON notification_history(created_at);
+
+-- Seasons
+CREATE INDEX idx_seasons_active ON seasons(is_active);
+CREATE INDEX idx_seasons_type ON seasons(season_type);
+
+-- Pricing Rules
+CREATE INDEX idx_pricing_rules_active ON pricing_rules(is_active);
+CREATE INDEX idx_pricing_rules_type ON pricing_rules(rule_type);
+CREATE INDEX idx_pricing_rules_priority ON pricing_rules(priority);
+
+-- Price History
+CREATE INDEX idx_price_history_booking ON price_history(booking_id);
+CREATE INDEX idx_price_history_bed ON price_history(bed_id);
+CREATE INDEX idx_price_history_date ON price_history(price_date);
+
 -- ============================================
 -- TRIGGERS
 -- ============================================
@@ -555,6 +701,15 @@ CREATE TRIGGER update_tours_updated_at BEFORE UPDATE ON tours
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_push_subscriptions_updated_at BEFORE UPDATE ON push_subscriptions
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_seasons_updated_at BEFORE UPDATE ON seasons
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_pricing_rules_updated_at BEFORE UPDATE ON pricing_rules
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================

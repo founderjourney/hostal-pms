@@ -1,148 +1,177 @@
-# 📚 DOCUMENTACIÓN ALMANIK PMS
+# DOCUMENTACION ALMANIK PMS
 
-Bienvenido al centro de documentación del sistema Almanik PMS. Toda la documentación ha sido organizada profesionalmente para facilitar su consulta.
+Bienvenido al centro de documentacion del sistema Almanik PMS. Toda la documentacion ha sido organizada profesionalmente para facilitar su consulta.
+
+**Version:** 1.12.4
+**Ultima actualizacion:** 2025-11-28
 
 ---
 
-## 📁 ESTRUCTURA DE DOCUMENTACIÓN
+## ESTRUCTURA DE DOCUMENTACION
 
-### 01. Documentación de Producto
-**Ubicación:** `docs/01-product/`
+### 01. Documentacion de Producto
+**Ubicacion:** `docs/01-product/`
 
-Define qué es el sistema, sus objetivos y validaciones:
+Define que es el sistema, sus objetivos y validaciones:
 
-- **PRD-v3-SIMPLIFICADO.md** - Product Requirements Document (versión simplificada)
-- **MVP-VALIDATION-SUMMARY.md** - Resumen de validación del MVP
+- **PRD-v3-SIMPLIFICADO.md** - Product Requirements Document (version simplificada)
+- **MVP-VALIDATION-SUMMARY.md** - Resumen de validacion del MVP
 - **RESUMEN-EJECUTIVO-SISTEMA.md** - Resumen ejecutivo para stakeholders
 
-### 02. Planificación y Roadmaps
-**Ubicación:** `docs/02-planning/`
+### 02. Planificacion y Roadmaps
+**Ubicacion:** `docs/02-planning/`
 
-Planificación del proyecto y hojas de ruta:
+Planificacion del proyecto y hojas de ruta:
 
-- **ROADMAP-SENIOR.md** - Roadmap técnico nivel senior
+- **ROADMAP-SENIOR.md** - Roadmap tecnico nivel senior
 - **ROADMAP-FUTURO-FEATURES-COMPLEJAS.md** - Features avanzadas futuras
-- **SPRINTS-ALMANIK-PMS-SIMPLIFICADO.md** - Planificación de sprints
+- **SPRINTS-ALMANIK-PMS-SIMPLIFICADO.md** - Planificacion de sprints
+- **DEVELOPMENT-PLAN-2025-UPDATED.md** - Plan de desarrollo 2025
 
-### 03. Deployment y Configuración
-**Ubicación:** `docs/03-deployment/`
+### 03. Deployment y Configuracion
+**Ubicacion:** `docs/03-deployment/`
 
-Guías de despliegue y configuración en producción:
+Guias de despliegue y configuracion en produccion:
 
-- **DEPLOYMENT-GUIDE.md** - Guía general de despliegue
-- **NEON-MIGRATION-PLAN.md** - Plan de migración a Neon PostgreSQL
-- **MIGRATION-COMPLETE.md** - Reporte de migración completada (Day 1)
-- **PRODUCTION-DEPLOY-COMPLETE.md** - Despliegue en producción completo
-- **DEPLOY-SUCCESS.md** - Reporte de despliegue exitoso
-- **SUPABASE-SETUP.md** - Configuración de Supabase (legacy)
+- **DEPLOYMENT-GUIDE.md** - Guia general de despliegue
+- **NEON-MIGRATION-PLAN.md** - Plan de migracion a Neon PostgreSQL
+- **MIGRATION-COMPLETE.md** - Reporte de migracion completada
+- **PRODUCTION-DEPLOY-COMPLETE.md** - Despliegue en produccion completo
 
 ### 04. Planes Diarios y Reportes
-**Ubicación:** `docs/04-daily-plans/` y `docs/04-reports/`
+**Ubicacion:** `docs/04-daily-plans/` y `docs/04-reports/`
 
-#### Planes Diarios (NEW - 2025-11-20):
-- **DIA-2-PLAN.md** - 🆕 Plan detallado Día 2 con estrategia de delegación
-- **DIA-2-RESUMEN.md** - 🆕 Resumen completo Día 2 (100% completado)
+#### Planes Diarios (Days 2-11):
+- **DIA-2-PLAN.md** a **DIA-11-PLAN.md** - Planes detallados con estrategia de delegacion
+- **DIA-X-RESUMEN.md** - Resumenes de ejecucion completados
+- **FIX-NAVEGACION-CRITICO.md** - Hotfix de navegacion
 
 #### Reportes de Estado:
-- **STATUS-REPORT-CURRENT.md** - Reporte histórico (Oct 2025)
-- **STATUS-REPORT.md** - Reporte histórico anterior
-- **TECHNICAL-AUDIT-REPORT.md** - Auditoría técnica del sistema
-- **SENIOR-ARCHITECT-AUDIT-2025-11-19.md** - Auditoría arquitectónica
+- **STATUS-REPORT-CURRENT.md** - Reporte de estado
+- **TECHNICAL-AUDIT-REPORT.md** - Auditoria tecnica del sistema
+- **SENIOR-ARCHITECT-AUDIT-2025-11-19.md** - Auditoria arquitectonica
 
-### 05. Documentación API
-**Ubicación:** `docs/05-api/`
+### 05. Documentacion API
+**Ubicacion:** `docs/05-api/`
 
-Documentación detallada de APIs y endpoints:
+Documentacion detallada de APIs y endpoints:
 
-- **RESERVATIONS-API.md** - 🆕 API completa de Reservas (7 endpoints) con ejemplos
+| Archivo | Endpoints | Descripcion |
+|---------|-----------|-------------|
+| **API-COMPLETE.md** | Overview | Vista general de todas las APIs |
+| **RESERVATIONS-API.md** | 7 | API de Reservaciones |
+| **ICAL-SYNC-API.md** | 11 | API de Sincronizacion iCal |
+| **STAFF-API.md** | 11 | API de Gestion de Personal |
+| **TASKS-API.md** | 10 | API de Tareas/Mantenimiento |
+| **CASHBOX-API.md** | 12 | API de Caja/Finanzas |
 
-### 06. Notas de Desarrollo
-**Ubicación:** `docs/05-development/`
+**Total:** 51+ endpoints documentados
 
-Contexto y notas para el equipo de desarrollo:
+### 06. Manual de Usuario
+**Ubicacion:** `docs/06-user-manual/`
+
+- **USER-MANUAL.md** - Manual completo para usuarios del sistema
+
+### 07. Guias de Produccion
+**Ubicacion:** `docs/07-deployment/`
+
+- **VERCEL-NEON-DEPLOYMENT.md** - Guia paso a paso Vercel + Neon
+- **PERFORMANCE-OPTIMIZATION.md** - Optimizacion de rendimiento serverless
+- **PRODUCTION-CHECKLIST.md** - Checklist de produccion
+
+### 08. Arquitectura
+**Ubicacion:** `docs/08-architecture/`
+
+Documentacion de arquitectura del sistema.
+
+### Notas de Desarrollo
+**Ubicacion:** `docs/05-development/`
 
 - **context.md** - Contexto completo del proyecto (IMPORTANTE)
-- **REVISAO-CON-VIVI.txt** - Notas de revisión con stakeholder
-- **habitaciones.txt** - Configuración de habitaciones y camas
 
 ### Archivo de Documentos Obsoletos
-**Ubicación:** `docs/archive/obsolete-docs/`
+**Ubicacion:** `docs/archive/obsolete-docs/`
 
-Documentación antigua que ya no es relevante pero se mantiene para referencia histórica.
+Documentacion antigua que ya no es relevante pero se mantiene para referencia historica.
 
 ---
 
-## 🚀 INICIO RÁPIDO
+## INICIO RAPIDO
 
 ### Para nuevos desarrolladores:
-1. 🔥 **START HERE:** `docs/START-HERE.md`
-2. 📊 **Progreso actual:** `docs/PROJECT-TRACKING.md` (🆕 ACTUALIZADO)
-3. 📖 Contexto completo: `docs/05-development/context.md`
-4. 📋 PRD del sistema: `docs/01-product/PRD-v3-SIMPLIFICADO.md`
-
-### Para seguir el progreso diario:
-1. 🎯 **Tracking general:** `docs/PROJECT-TRACKING.md` (70% completado)
-2. 📅 **Día 2 (último):** `docs/04-daily-plans/DIA-2-RESUMEN.md` (✅ Completado)
-3. 🗓️ **Plan Día 2:** `docs/04-daily-plans/DIA-2-PLAN.md`
+1. **START HERE:** `docs/START-HERE.md`
+2. **Progreso actual:** `docs/PROJECT-TRACKING.md`
+3. **Contexto completo:** `docs/05-development/context.md`
+4. **PRD del sistema:** `docs/01-product/PRD-v3-SIMPLIFICADO.md`
 
 ### Para usar las APIs:
-1. 🔌 **API Reservations:** `docs/05-api/RESERVATIONS-API.md` (7 endpoints)
-2. 🧪 **Testing manual:** `GUIA-TESTING-MANUAL.md` (raíz del proyecto)
-3. 🤖 **Testing automático:** `test-reservations.sh` (raíz del proyecto)
+1. **Vista general:** `docs/05-api/API-COMPLETE.md`
+2. **Reservations:** `docs/05-api/RESERVATIONS-API.md`
+3. **Staff:** `docs/05-api/STAFF-API.md`
+4. **Tasks:** `docs/05-api/TASKS-API.md`
+5. **Cashbox:** `docs/05-api/CASHBOX-API.md`
+6. **iCal:** `docs/05-api/ICAL-SYNC-API.md`
 
 ### Para deployment:
-1. Guía principal: `docs/03-deployment/DEPLOYMENT-GUIDE.md`
-2. Migración Neon: `docs/03-deployment/NEON-MIGRATION-PLAN.md`
-3. Reporte migración: `docs/03-deployment/MIGRATION-COMPLETE.md`
+1. **Guia Vercel+Neon:** `docs/07-deployment/VERCEL-NEON-DEPLOYMENT.md`
+2. **Optimizacion:** `docs/07-deployment/PERFORMANCE-OPTIMIZATION.md`
+3. **Checklist:** `docs/07-deployment/PRODUCTION-CHECKLIST.md`
 
 ### Para stakeholders:
-1. 📊 Progreso actual: `docs/PROJECT-TRACKING.md`
-2. Resumen ejecutivo: `docs/01-product/RESUMEN-EJECUTIVO-SISTEMA.md`
-3. Roadmap: `docs/02-planning/ROADMAP-SENIOR.md`
+1. **Progreso actual:** `docs/PROJECT-TRACKING.md`
+2. **Resumen ejecutivo:** `docs/01-product/RESUMEN-EJECUTIVO-SISTEMA.md`
+3. **Roadmap:** `docs/02-planning/ROADMAP-SENIOR.md`
 
 ---
 
-## 📊 OTROS RECURSOS DEL PROYECTO
+## RECURSOS DEL PROYECTO
 
 ### Base de Datos
-**Ubicación:** `database/`
+**Ubicacion:** `database/`
 
-- `schemas/` - Esquemas SQL
-- `seeds/` - Datos de prueba
-- `migrations/` - Scripts de migración
-- `local/` - Base de datos SQLite local
+- `schemas/neon-production-schema.sql` - Esquema de produccion (sin datos demo)
+- `schemas/neon-complete-schema.sql` - Esquema con datos de prueba
 
-### Scripts de Desarrollo
-**Ubicación:** `scripts/`
+### Scripts
+**Ubicacion:** `scripts/`
 
-- `setup.sh` - Script de configuración inicial
-- `test-simple.js` - Tests básicos
-- `test-supabase.js` - Tests de Supabase
+- `full-audit.sh` - Auditoria completa del sistema
+- `test-modules.sh` - Tests de modulos
 
-### Prototipos HTML
-**Ubicación:** `prototypes/`
+### Modulos del Servidor
+**Ubicacion:** `server/modules/`
 
-Prototipos HTML antiguos para referencia histórica.
+| Modulo | Descripcion |
+|--------|-------------|
+| `reservations.js` | Gestion de reservaciones |
+| `analytics.js` | Analytics y reportes |
+| `ical-sync.js` | Sincronizacion iCal |
+| `staff.js` | Gestion de personal |
+| `tasks.js` | Tareas y mantenimiento |
+| `cashbox.js` | Caja y finanzas |
+| `beds-advanced.js` | Gestion avanzada de camas |
+| `front-desk.js` | Operaciones de recepcion |
 
 ---
 
-## 🔄 MANTENIMIENTO DE DOCUMENTACIÓN
+## MANTENIMIENTO DE DOCUMENTACION
 
-### Cuando actualizar documentación:
+### Cuando actualizar documentacion:
 
 - **Cambios en features:** Actualizar PRD y roadmaps
-- **Cambios en deployment:** Actualizar guías de deployment
+- **Cambios en deployment:** Actualizar guias de deployment
 - **Updates de estado:** Crear nuevo reporte en `04-reports/`
-- **Notas técnicas:** Agregar a `context.md`
+- **Nuevas APIs:** Actualizar documentacion en `05-api/`
 
-### Convención de nombres:
+### Convencion de nombres:
 
-- Usar MAYÚSCULAS para nombres principales
+- Usar MAYUSCULAS para nombres principales
 - Usar guiones `-` para separar palabras
-- Incluir fecha en reportes periódicos (si aplica)
+- Incluir fecha en reportes periodicos (si aplica)
 - Usar sufijos descriptivos: `-GUIDE`, `-REPORT`, `-COMPLETE`
 
 ---
 
-**Última actualización:** 2025-11-20 (Day 2 - Reservations Backend Complete)
+**Ultima actualizacion:** 2025-11-28
 **Mantenido por:** Equipo Almanik PMS
+**Version:** 1.12.4

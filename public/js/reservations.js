@@ -49,6 +49,14 @@ async function apiRequest(endpoint, options = {}) {
 document.addEventListener('DOMContentLoaded', async () => {
     await loadInitialData();
     await loadReservations();
+
+    // DEV2-11: Check if action=new in URL, open modal automatically
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'new') {
+        openCreateModal();
+        // Clean up URL without reload
+        window.history.replaceState({}, '', window.location.pathname);
+    }
 });
 
 async function loadInitialData() {

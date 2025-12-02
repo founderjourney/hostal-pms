@@ -38,6 +38,8 @@ const INCOME_CATEGORIES = [
   'extra_service',
   'bar_restaurant',
   'laundry',
+  'stripe_payment',      // DEV1-04: Stripe payments
+  'stripe_preauth',      // DEV1-04: Stripe pre-authorization captured
   'other_income'
 ];
 
@@ -49,10 +51,11 @@ const EXPENSE_CATEGORIES = [
   'food_beverage',
   'cleaning',
   'petty_cash',
+  'stripe_refund',       // DEV1-04: Stripe refunds
   'other_expense'
 ];
 
-const PAYMENT_METHODS = ['cash', 'card', 'transfer', 'other'];
+const PAYMENT_METHODS = ['cash', 'card', 'transfer', 'stripe', 'other'];
 
 const CATEGORY_LABELS = {
   // Income
@@ -61,6 +64,8 @@ const CATEGORY_LABELS = {
   extra_service: 'Servicio Extra',
   bar_restaurant: 'Bar/Restaurante',
   laundry: 'Lavanderia',
+  stripe_payment: 'Pago Stripe',           // DEV1-04
+  stripe_preauth: 'Pre-auth Stripe Capturada', // DEV1-04
   other_income: 'Otros Ingresos',
   // Expense
   supplies: 'Suministros',
@@ -70,6 +75,7 @@ const CATEGORY_LABELS = {
   food_beverage: 'Alimentos/Bebidas',
   cleaning: 'Limpieza',
   petty_cash: 'Caja Menor',
+  stripe_refund: 'Reembolso Stripe',       // DEV1-04
   other_expense: 'Otros Gastos',
   // Adjustment
   adjustment: 'Ajuste'
@@ -79,6 +85,7 @@ const PAYMENT_METHOD_LABELS = {
   cash: 'Efectivo',
   card: 'Tarjeta',
   transfer: 'Transferencia',
+  stripe: 'Stripe',  // DEV1-04
   other: 'Otro'
 };
 
@@ -892,6 +899,182 @@ router.get('/daily-report', async (req, res) => {
     });
   } catch (error) {
     console.error('Error generating daily report:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// DEV1-04: STRIPE INTEGRATION
+// ============================================================
+
+/**
+ * POST /stripe-sync - Register Stripe payment in cashbox
+ * Called automatically when Stripe payments are processed
+ *
+ * Body:
+ * - type: 'charge' | 'capture' | 'refund'
+ * - amount: number (in smallest currency unit)
+ * - stripe_payment_id: string
+ * - reservation_id: number (optional)
+ * - description: string (optional)
+ */
+router.post('/stripe-sync', async (req, res) => {
+  try {
+    const db = getDb(req);
+    const isSqlite = !db.isProduction;
+    const userId = getUserId(req);
+
+    const {
+      type,
+      amount,
+      stripe_payment_id,
+      reservation_id,
+      description
+    } = req.body;
+
+    // Validate type
+    const validTypes = ['charge', 'capture', 'refund'];
+    if (!type || !validTypes.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Valid type is required: charge, capture, or refund'
+      });
+    }
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, error: 'Amount must be greater than 0' });
+    }
+
+    // Get current open session (optional - Stripe transactions can exist without open session)
+    const sessions = await db.query(
+      `SELECT id FROM cashbox_sessions WHERE status = 'open' LIMIT 1`,
+      []
+    );
+
+    const sessionId = sessions.length > 0 ? sessions[0].id : null;
+
+    // Determine transaction type and category based on Stripe event type
+    let transactionType, category, transactionDesc;
+
+    if (type === 'charge') {
+      transactionType = 'income';
+      category = 'stripe_payment';
+      transactionDesc = description || `Pago Stripe - ${stripe_payment_id}`;
+    } else if (type === 'capture') {
+      transactionType = 'income';
+      category = 'stripe_preauth';
+      transactionDesc = description || `Pre-auth capturada - ${stripe_payment_id}`;
+    } else if (type === 'refund') {
+      transactionType = 'expense';
+      category = 'stripe_refund';
+      transactionDesc = description || `Reembolso Stripe - ${stripe_payment_id}`;
+    }
+
+    // Insert transaction
+    const insertQuery = isSqlite
+      ? `INSERT INTO cashbox_transactions
+         (session_id, transaction_type, category, amount, description, payment_method, reference_type, reference_id, created_by, created_at)
+         VALUES (?, ?, ?, ?, ?, 'stripe', 'stripe_payment', ?, ?, CURRENT_TIMESTAMP)`
+      : `INSERT INTO cashbox_transactions
+         (session_id, transaction_type, category, amount, description, payment_method, reference_type, reference_id, created_by, created_at)
+         VALUES ($1, $2, $3, $4, $5, 'stripe', 'stripe_payment', $6, $7, NOW()) RETURNING *`;
+
+    const result = await db.query(insertQuery, [
+      sessionId,
+      transactionType,
+      category,
+      amount,
+      transactionDesc,
+      stripe_payment_id,
+      userId
+    ]);
+
+    const transactionId = isSqlite ? result.lastID : result[0]?.id;
+
+    await logActivity(db, `stripe_${type}_recorded`, 'cashbox_transaction', transactionId, {
+      stripe_payment_id,
+      amount,
+      category,
+      reservation_id,
+      has_session: !!sessionId
+    }, userId);
+
+    res.status(201).json({
+      success: true,
+      message: `Stripe ${type} recorded in cashbox`,
+      transaction_id: transactionId,
+      session_id: sessionId,
+      warning: !sessionId ? 'No open cashbox session - transaction recorded without session' : null
+    });
+  } catch (error) {
+    console.error('Error recording Stripe transaction:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /stripe-summary - Get Stripe transactions summary
+ * Shows all Stripe-related transactions
+ */
+router.get('/stripe-summary', async (req, res) => {
+  try {
+    const db = getDb(req);
+    const isSqlite = !db.isProduction;
+    const { date, start_date, end_date } = req.query;
+
+    let dateCondition = '';
+    const params = [];
+    let paramIndex = 1;
+
+    if (date) {
+      dateCondition = isSqlite
+        ? `AND DATE(created_at) = ?`
+        : `AND DATE(created_at) = $${paramIndex++}`;
+      params.push(date);
+    } else if (start_date && end_date) {
+      if (isSqlite) {
+        dateCondition = `AND DATE(created_at) BETWEEN ? AND ?`;
+      } else {
+        dateCondition = `AND DATE(created_at) BETWEEN $${paramIndex++} AND $${paramIndex++}`;
+      }
+      params.push(start_date, end_date);
+    }
+
+    const query = `
+      SELECT
+        t.*,
+        u.name as created_by_name
+      FROM cashbox_transactions t
+      LEFT JOIN users u ON t.created_by = u.id
+      WHERE t.payment_method = 'stripe'
+      ${dateCondition}
+      ORDER BY t.created_at DESC
+    `;
+
+    const transactions = await db.query(query, params);
+
+    // Calculate summary
+    const summary = transactions.reduce((acc, t) => {
+      if (t.transaction_type === 'income') {
+        acc.total_income += t.amount;
+        if (t.category === 'stripe_payment') acc.charges += t.amount;
+        if (t.category === 'stripe_preauth') acc.captures += t.amount;
+      } else if (t.transaction_type === 'expense') {
+        acc.total_refunds += t.amount;
+      }
+      return acc;
+    }, { total_income: 0, total_refunds: 0, charges: 0, captures: 0 });
+
+    summary.net = summary.total_income - summary.total_refunds;
+
+    res.json({
+      success: true,
+      count: transactions.length,
+      transactions,
+      summary
+    });
+  } catch (error) {
+    console.error('Error fetching Stripe summary:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

@@ -1,5 +1,6 @@
 // DATABASE ADAPTER - Soporta SQLite (local) y PostgreSQL (producción)
-const sqlite3 = require('sqlite3').verbose();
+// Lazy load sqlite3 only when needed (avoids issues in Vercel serverless)
+let sqlite3 = null;
 const { Pool } = require('pg');
 const path = require('path');
 
@@ -8,6 +9,14 @@ class DatabaseAdapter {
     this.isProduction = process.env.NODE_ENV === 'production';
     this.db = null;
     this.pool = null;
+  }
+
+  // Load sqlite3 only when needed (not in production)
+  _getSqlite3() {
+    if (!sqlite3 && !this.isProduction) {
+      sqlite3 = require('sqlite3').verbose();
+    }
+    return sqlite3;
   }
 
   async connect() {
@@ -43,7 +52,8 @@ class DatabaseAdapter {
     } else {
       // SQLite para desarrollo
       const dbPath = path.join(__dirname, 'almanik.db');
-      this.db = new sqlite3.Database(dbPath);
+      const sqlite = this._getSqlite3();
+      this.db = new sqlite.Database(dbPath);
       console.log('✅ Connected to SQLite (Development)');
       await this.initializeSQLite();
     }

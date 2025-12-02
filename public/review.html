@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deja tu Review - Almanik PMS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .review-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .review-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .review-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .review-header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .guest-info {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .guest-info span {
+            display: block;
+            font-size: 13px;
+        }
+
+        .review-body {
+            padding: 30px;
+        }
+
+        .rating-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .rating-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .star-rating i {
+            font-size: 40px;
+            color: #ddd;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .star-rating i:hover,
+        .star-rating i.active {
+            color: #f1c40f;
+            transform: scale(1.1);
+        }
+
+        .category-ratings {
+            margin: 30px 0;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .category-ratings h4 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .category-item label {
+            color: #555;
+            font-size: 14px;
+        }
+
+        .mini-stars {
+            display: flex;
+            gap: 5px;
+        }
+
+        .mini-stars i {
+            font-size: 18px;
+            color: #ddd;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mini-stars i:hover,
+        .mini-stars i.active {
+            color: #f1c40f;
+        }
+
+        .comment-section {
+            margin: 20px 0;
+        }
+
+        .comment-section label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .comment-section textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .comment-section textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* States */
+        .loading-state,
+        .error-state,
+        .success-state,
+        .completed-state {
+            text-align: center;
+            padding: 60px 30px;
+        }
+
+        .loading-state i {
+            font-size: 50px;
+            color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-state i {
+            font-size: 60px;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+
+        .error-state h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .error-state p {
+            color: #666;
+        }
+
+        .success-state i {
+            font-size: 80px;
+            color: #27ae60;
+            margin-bottom: 20px;
+        }
+
+        .success-state h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .success-state p {
+            color: #666;
+        }
+
+        .completed-state i {
+            font-size: 60px;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .review-header {
+                padding: 20px;
+            }
+
+            .review-body {
+                padding: 20px;
+            }
+
+            .star-rating i {
+                font-size: 32px;
+            }
+
+            .category-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="review-container">
+        <!-- Loading State -->
+        <div id="loading-state" class="loading-state">
+            <i class="fas fa-spinner"></i>
+            <p style="margin-top: 20px; color: #666;">Cargando...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="error-state hidden">
+            <i class="fas fa-exclamation-circle"></i>
+            <h2>Link Invalido</h2>
+            <p id="error-message">Este enlace no es valido o ha expirado.</p>
+        </div>
+
+        <!-- Already Completed State -->
+        <div id="completed-state" class="completed-state hidden">
+            <i class="fas fa-check-circle"></i>
+            <h2>Ya dejaste tu review</h2>
+            <p>Gracias por compartir tu experiencia con nosotros.</p>
+        </div>
+
+        <!-- Success State -->
+        <div id="success-state" class="success-state hidden">
+            <i class="fas fa-heart"></i>
+            <h2>Gracias por tu review!</h2>
+            <p>Tu opinion nos ayuda a mejorar cada dia.</p>
+        </div>
+
+        <!-- Review Form -->
+        <div id="review-form" class="hidden">
+            <div class="review-header">
+                <h1><i class="fas fa-star"></i> Cuentanos tu experiencia</h1>
+                <p>Tu opinion es muy importante para nosotros</p>
+                <div class="guest-info">
+                    <span><strong id="guest-name"></strong></span>
+                    <span id="stay-dates"></span>
+                </div>
+            </div>
+
+            <div class="review-body">
+                <form id="reviewFormElement">
+                    <!-- Main Rating -->
+                    <div class="rating-section">
+                        <h3>Como fue tu estadia?</h3>
+                        <div class="star-rating" id="main-rating">
+                            <i class="fas fa-star" data-rating="1"></i>
+                            <i class="fas fa-star" data-rating="2"></i>
+                            <i class="fas fa-star" data-rating="3"></i>
+                            <i class="fas fa-star" data-rating="4"></i>
+                            <i class="fas fa-star" data-rating="5"></i>
+                        </div>
+                        <p id="rating-text" style="margin-top: 10px; color: #666; font-size: 14px;">Selecciona una calificacion</p>
+                    </div>
+
+                    <!-- Category Ratings -->
+                    <div class="category-ratings">
+                        <h4>Califica cada aspecto (opcional)</h4>
+                        <div id="categories-container"></div>
+                    </div>
+
+                    <!-- Comment -->
+                    <div class="comment-section">
+                        <label for="comment">Comentarios adicionales (opcional)</label>
+                        <textarea
+                            id="comment"
+                            placeholder="Cuentanos mas sobre tu experiencia... Que te gusto? Que podemos mejorar?"
+                        ></textarea>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="submit-btn" id="submit-btn" disabled>
+                        <i class="fas fa-paper-plane"></i> Enviar Review
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let bookingData = null;
+        let mainRating = 0;
+        let categoryRatings = {};
+        let token = null;
+
+        const ratingTexts = {
+            1: 'Muy malo',
+            2: 'Malo',
+            3: 'Regular',
+            4: 'Bueno',
+            5: 'Excelente!'
+        };
+
+        // DOM Elements
+        const loadingState = document.getElementById('loading-state');
+        const errorState = document.getElementById('error-state');
+        const completedState = document.getElementById('completed-state');
+        const successState = document.getElementById('success-state');
+        const reviewForm = document.getElementById('review-form');
+        const mainRatingEl = document.getElementById('main-rating');
+        const ratingText = document.getElementById('rating-text');
+        const categoriesContainer = document.getElementById('categories-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const form = document.getElementById('reviewFormElement');
+
+        // Get token from URL
+        function getToken() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('token');
+        }
+
+        // Show state
+        function showState(state) {
+            loadingState.classList.add('hidden');
+            errorState.classList.add('hidden');
+            completedState.classList.add('hidden');
+            successState.classList.add('hidden');
+            reviewForm.classList.add('hidden');
+
+            switch(state) {
+                case 'loading':
+                    loadingState.classList.remove('hidden');
+                    break;
+                case 'error':
+                    errorState.classList.remove('hidden');
+                    break;
+                case 'completed':
+                    completedState.classList.remove('hidden');
+                    break;
+                case 'success':
+                    successState.classList.remove('hidden');
+                    break;
+                case 'form':
+                    reviewForm.classList.remove('hidden');
+                    break;
+            }
+        }
+
+        // Validate token
+        async function validateToken() {
+            token = getToken();
+
+            if (!token) {
+                showState('error');
+                document.getElementById('error-message').textContent = 'No se proporciono un token valido.';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/reviews/token/${token}`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    if (result.already_completed) {
+                        showState('completed');
+                    } else {
+                        showState('error');
+                        document.getElementById('error-message').textContent = result.error;
+                    }
+                    return;
+                }
+
+                bookingData = result.data;
+                initializeForm();
+                showState('form');
+
+            } catch (error) {
+                console.error('Error validating token:', error);
+                showState('error');
+                document.getElementById('error-message').textContent = 'Error de conexion. Intenta de nuevo.';
+            }
+        }
+
+        // Initialize form with booking data
+        function initializeForm() {
+            document.getElementById('guest-name').textContent = bookingData.guest_name;
+
+            const checkIn = new Date(bookingData.check_in).toLocaleDateString('es-CO');
+            const checkOut = new Date(bookingData.check_out).toLocaleDateString('es-CO');
+            document.getElementById('stay-dates').textContent = `${checkIn} - ${checkOut} | ${bookingData.bed_name}`;
+
+            // Create category ratings
+            bookingData.categories.forEach(cat => {
+                categoryRatings[cat.key] = 0;
+
+                const item = document.createElement('div');
+                item.className = 'category-item';
+                item.innerHTML = `
+                    <label>${cat.label}</label>
+                    <div class="mini-stars" data-category="${cat.key}">
+                        <i class="fas fa-star" data-rating="1"></i>
+                        <i class="fas fa-star" data-rating="2"></i>
+                        <i class="fas fa-star" data-rating="3"></i>
+                        <i class="fas fa-star" data-rating="4"></i>
+                        <i class="fas fa-star" data-rating="5"></i>
+                    </div>
+                `;
+                categoriesContainer.appendChild(item);
+            });
+
+            // Setup category star listeners
+            document.querySelectorAll('.mini-stars').forEach(container => {
+                const category = container.dataset.category;
+                container.querySelectorAll('i').forEach(star => {
+                    star.addEventListener('click', () => {
+                        const rating = parseInt(star.dataset.rating);
+                        categoryRatings[category] = rating;
+                        updateCategoryStars(container, rating);
+                    });
+
+                    star.addEventListener('mouseenter', () => {
+                        const rating = parseInt(star.dataset.rating);
+                        highlightStars(container, rating);
+                    });
+
+                    star.addEventListener('mouseleave', () => {
+                        updateCategoryStars(container, categoryRatings[category]);
+                    });
+                });
+            });
+        }
+
+        // Update main stars display
+        function updateMainStars(rating) {
+            mainRatingEl.querySelectorAll('i').forEach((star, index) => {
+                star.classList.toggle('active', index < rating);
+            });
+            ratingText.textContent = rating > 0 ? ratingTexts[rating] : 'Selecciona una calificacion';
+            submitBtn.disabled = rating === 0;
+        }
+
+        // Highlight stars on hover
+        function highlightStars(container, rating) {
+            container.querySelectorAll('i').forEach((star, index) => {
+                star.classList.toggle('active', index < rating);
+            });
+        }
+
+        // Update category stars
+        function updateCategoryStars(container, rating) {
+            container.querySelectorAll('i').forEach((star, index) => {
+                star.classList.toggle('active', index < rating);
+            });
+        }
+
+        // Main rating listeners
+        mainRatingEl.querySelectorAll('i').forEach(star => {
+            star.addEventListener('click', () => {
+                mainRating = parseInt(star.dataset.rating);
+                updateMainStars(mainRating);
+            });
+
+            star.addEventListener('mouseenter', () => {
+                const rating = parseInt(star.dataset.rating);
+                highlightStars(mainRatingEl, rating);
+                ratingText.textContent = ratingTexts[rating];
+            });
+
+            star.addEventListener('mouseleave', () => {
+                updateMainStars(mainRating);
+            });
+        });
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (mainRating === 0) {
+                alert('Por favor selecciona una calificacion');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+            // Filter out zero ratings from categories
+            const filteredCategories = {};
+            Object.keys(categoryRatings).forEach(key => {
+                if (categoryRatings[key] > 0) {
+                    filteredCategories[key] = categoryRatings[key];
+                }
+            });
+
+            try {
+                const response = await fetch('/api/reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token,
+                        rating: mainRating,
+                        comment: document.getElementById('comment').value || null,
+                        category_ratings: Object.keys(filteredCategories).length > 0 ? filteredCategories : null,
+                        language: navigator.language?.split('-')[0] || 'es'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showState('success');
+                } else {
+                    alert(result.error || 'Error al enviar review');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Review';
+                }
+
+            } catch (error) {
+                console.error('Error submitting review:', error);
+                alert('Error de conexion. Intenta de nuevo.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Review';
+            }
+        });
+
+        // Initialize
+        validateToken();
+    </script>
+</body>
+</html>

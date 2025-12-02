@@ -18,6 +18,7 @@ Este documento es tu **guía diaria de implementación**. Cada mañana:
 5. ✅ Al terminar el día, actualiza el checkbox de progreso
 
 **Archivos importantes:**
+
 - 📋 Plan completo: `docs/02-planning/DEVELOPMENT-PLAN-2025-UPDATED.md`
 - 📊 Auditoría: `docs/04-reports/SENIOR-ARCHITECT-AUDIT-2025-11-19.md`
 - 🗄️ Migración Neon: `docs/03-deployment/NEON-MIGRATION-PLAN.md`
@@ -60,6 +61,7 @@ DÍAS 52-56 → FASE 3 Sprint 9: Beds Advanced
 **⚠️ PREREQUISITO CRÍTICO - No continuar sin completar esto**
 
 **Duración:** 6-8 horas
+
 **Objetivo:** Database production-ready con 20 tablas en Neon
 
 ### CHECKLIST DÍA 1:
@@ -940,7 +942,7 @@ DÍAS 52-56 → FASE 3 Sprint 9: Beds Advanced
 ## 📊 TRACKING DE PROGRESO
 
 ### FASE 0: MIGRACIÓN NEON
-- [x] Día 1: Migración completa a Neon ✅ **COMPLETADO** (2025-11-20)
+- [ ] Día 1: Migración completa a Neon
 
 ### FASE 1 SPRINT 1: CRITICAL BUGS (5 días)
 - [ ] Día 2: Fix check-in/checkout (parte 1)

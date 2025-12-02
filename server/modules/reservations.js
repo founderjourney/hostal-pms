@@ -64,16 +64,17 @@ function validateDateRange(checkIn, checkOut) {
 
 /**
  * Verificar disponibilidad de cama para fechas específicas
+ * INCLUYE reservas internas (bookings) Y externas (Booking.com, Airbnb via iCal)
  */
 async function checkBedAvailability(bedId, checkIn, checkOut, excludeBookingId = null) {
   await db.ensureConnection();
 
-  // Query para buscar conflictos de reservas
-  const query = `
-    SELECT id, confirmation_code, check_in, check_out, status
+  // 1. Query para buscar conflictos en reservas INTERNAS
+  const internalQuery = `
+    SELECT id, confirmation_code, check_in, check_out, status, 'internal' as source
     FROM bookings
     WHERE bed_id = $1
-      AND status IN ('pending', 'confirmed', 'checked_in')
+      AND status IN ('pending', 'confirmed', 'checked_in', 'active')
       AND (
         (check_in <= $2 AND check_out > $2) OR
         (check_in < $3 AND check_out >= $3) OR
@@ -82,15 +83,49 @@ async function checkBedAvailability(bedId, checkIn, checkOut, excludeBookingId =
       ${excludeBookingId ? 'AND id != $4' : ''}
   `;
 
-  const params = excludeBookingId
+  const internalParams = excludeBookingId
     ? [bedId, checkIn, checkOut, excludeBookingId]
     : [bedId, checkIn, checkOut];
 
-  const conflictingBookings = await db.query(query, params);
+  const internalConflicts = await db.query(internalQuery, internalParams);
+
+  // 2. Query para buscar conflictos en reservas EXTERNAS (Booking.com, Airbnb via iCal)
+  let externalConflicts = [];
+  try {
+    const externalQuery = `
+      SELECT
+        er.id,
+        er.external_id as confirmation_code,
+        er.check_in,
+        er.check_out,
+        er.status,
+        'external' as source,
+        is2.name as platform_name
+      FROM external_reservations er
+      JOIN ical_sources is2 ON er.source_id = is2.id
+      WHERE is2.bed_id = $1
+        AND er.status IN ('confirmed', 'tentative')
+        AND (
+          (er.check_in <= $2 AND er.check_out > $2) OR
+          (er.check_in < $3 AND er.check_out >= $3) OR
+          (er.check_in >= $2 AND er.check_out <= $3)
+        )
+    `;
+
+    externalConflicts = await db.query(externalQuery, [bedId, checkIn, checkOut]);
+  } catch (error) {
+    // Si la tabla external_reservations no existe, ignorar el error
+    console.log('Note: external_reservations table may not exist yet');
+  }
+
+  // 3. Combinar todos los conflictos
+  const allConflicts = [...internalConflicts, ...externalConflicts];
 
   return {
-    available: conflictingBookings.length === 0,
-    conflictingBookings: conflictingBookings
+    available: allConflicts.length === 0,
+    conflictingBookings: allConflicts,
+    internalConflicts: internalConflicts.length,
+    externalConflicts: externalConflicts.length
   };
 }
 

@@ -1,8 +1,9 @@
-# 📑 ALMANIK PMS - COMPLETE DOCUMENTATION INDEX
+# ALMANIK PMS - COMPLETE DOCUMENTATION INDEX
 
-**Last Updated:** 2025-11-20
-**Total Documents:** 35+
+**Last Updated:** 2025-11-28
+**Total Documents:** 65+
 **Coverage:** All project areas
+**Version:** 1.12.4
 
 ---
 
@@ -80,22 +81,32 @@
 
 ---
 
-## 📁 03-DEPLOYMENT/ - Deployment & Infrastructure
+## 03-DEPLOYMENT/ - Deployment & Infrastructure
 
 **Purpose:** HOW to deploy, configure, and maintain production systems
 
 | File | Type | Status | Last Action |
 |------|------|--------|-------------|
-| `DEPLOYMENT-GUIDE.md` | 📖 Guide | Current | General deployment |
-| `NEON-MIGRATION-PLAN.md` | 📋 Plan | ✅ Complete | Day 1 - 2025-11-19 |
-| `MIGRATION-COMPLETE.md` | 📊 Report | ✅ Complete | Day 1 migration success |
-| `PRODUCTION-DEPLOY-COMPLETE.md` | 📊 Report | Current | Vercel deployment |
-| `DEPLOY-SUCCESS.md` | 📊 Report | Archive | Historical success |
-| `SUPABASE-SETUP.md` | 📖 Guide | Legacy | Replaced by Neon |
+| `DEPLOYMENT-GUIDE.md` | Guide | Current | General deployment |
+| `NEON-MIGRATION-PLAN.md` | Plan | Complete | Day 1 - 2025-11-19 |
+| `MIGRATION-COMPLETE.md` | Report | Complete | Day 1 migration success |
+| `PRODUCTION-DEPLOY-COMPLETE.md` | Report | Current | Vercel deployment |
+| `DEPLOY-SUCCESS.md` | Report | Archive | Historical success |
+| `SUPABASE-SETUP.md` | Guide | Legacy | Replaced by Neon |
+
+## 07-DEPLOYMENT/ - Production Guides (NEW)
+
+| File | Type | Status | Date |
+|------|------|--------|------|
+| `VERCEL-NEON-DEPLOYMENT.md` | Guide | Current | 2025-11-27 |
+| `PERFORMANCE-OPTIMIZATION.md` | Guide | Current | 2025-11-27 |
+| `PRODUCTION-CHECKLIST.md` | Checklist | Current | 2025-11-21 |
 
 **Key Topics:**
-- Vercel deployment configuration
+- Vercel serverless deployment
 - Neon PostgreSQL setup
+- Cold start optimization
+- Connection pooling
 - Environment variables
 - SSL certificates
 - Database migrations
@@ -106,28 +117,36 @@
 
 ---
 
-## 📁 04-DAILY-PLANS/ - Daily Work Plans (NEW)
+## 04-DAILY-PLANS/ - Daily Work Plans
 
 **Purpose:** Detailed day-by-day execution plans and summaries
 
-| File | Day | Status | Date | Duration |
-|------|-----|--------|------|----------|
-| `DIA-2-PLAN.md` | Day 2 | ✅ Complete | 2025-11-20 | ~900 lines |
-| `DIA-2-RESUMEN.md` | Day 2 | ✅ Complete | 2025-11-20 | ~320 lines |
+| File | Day | Status | Date |
+|------|-----|--------|------|
+| `DIA-2-PLAN.md` | Day 2 | Complete | 2025-11-20 |
+| `DIA-2-RESUMEN.md` | Day 2 | Complete | 2025-11-20 |
+| `DIA-3-PLAN.md` | Day 3 | Complete | 2025-11-21 |
+| `DIA-3-RESUMEN.md` | Day 3 | Complete | 2025-11-21 |
+| `DIA-4-PLAN.md` | Day 4 | Complete | 2025-11-21 |
+| `DIA-4-RESUMEN.md` | Day 4 | Complete | 2025-11-21 |
+| `DIA-5-PLAN.md` | Day 5 | Complete | 2025-11-21 |
+| `DIA-5-RESUMEN.md` | Day 5 | Complete | 2025-11-21 |
+| `DIA-6-PLAN.md` | Day 6 | Complete | 2025-11-21 |
+| `DIA-7-PLAN.md` | Day 7 | Complete | 2025-11-21 |
+| `DIA-8-PLAN.md` | Day 8 | Complete | 2025-11-21 |
+| `DIA-9-PLAN.md` | Day 9 | Complete | 2025-11-21 |
+| `DIA-10-PLAN.md` | Day 10 | Complete | 2025-11-21 |
+| `DIA-11-PLAN.md` | Day 11 | Complete | 2025-11-21 |
+| `DIA-11-RESUMEN.md` | Day 11 | Complete | 2025-11-23 |
+| `DIA-11-REVISION-FRONTEND.md` | Day 11 | Complete | 2025-11-23 |
+| `FIX-NAVEGACION-CRITICO.md` | Hotfix | Complete | 2025-11-23 |
 
 **Contents:**
 - Detailed task breakdown
 - Delegation strategy
 - Verification criteria
-- Time estimates
 - Testing requirements
 - Success metrics
-
-**Day 2 Highlights:**
-- 7 API endpoints implemented
-- Complete reservations backend
-- Testing infrastructure established
-- 100% completion rate
 
 ---
 
@@ -146,22 +165,23 @@
 
 ---
 
-## 📁 05-API/ - API Documentation (NEW)
+## 05-API/ - API Documentation
 
 **Purpose:** Complete API endpoint documentation with examples
 
 | File | Endpoints | Status | Date |
 |------|-----------|--------|------|
-| `RESERVATIONS-API.md` | 7 endpoints | ✅ Complete | 2025-11-20 |
+| `API-COMPLETE.md` | Overview | Complete | 2025-11-21 |
+| `API-DOCUMENTATION.md` | Summary | Complete | 2025-11-21 |
+| `RESERVATIONS-API.md` | 7 endpoints | Complete | 2025-11-20 |
+| `ICAL-SYNC-API.md` | 11 endpoints | Complete | 2025-11-21 |
+| `STAFF-API.md` | 11 endpoints | Complete | 2025-11-27 |
+| `TASKS-API.md` | 10 endpoints | Complete | 2025-11-27 |
+| `CASHBOX-API.md` | 12 endpoints | Complete | 2025-11-27 |
+| `REVIEWS-API.md` | 10 endpoints | Complete | 2025-11-28 |
+| `WHATSAPP-API.md` | 8 endpoints | Complete | 2025-11-28 |
 
-**Reservations Endpoints:**
-1. `GET /api/reservations` - List all with filters
-2. `POST /api/reservations` - Create new reservation
-3. `GET /api/reservations/:id` - Get details
-4. `PUT /api/reservations/:id` - Update reservation
-5. `DELETE /api/reservations/:id` - Cancel reservation
-6. `POST /api/reservations/:id/confirm` - Confirm reservation
-7. `GET /api/reservations/availability/check` - Check availability
+**Total API Endpoints Documented:** 69+
 
 **Documentation Includes:**
 - Request/Response schemas
@@ -263,30 +283,33 @@
 
 ---
 
-## 📈 DOCUMENTATION METRICS
+## DOCUMENTATION METRICS
 
 ### Coverage by Area
 | Area | Files | Status | Coverage |
 |------|-------|--------|----------|
 | Product | 3 | Complete | 100% |
 | Planning | 4 | Current | 100% |
-| Deployment | 6 | Current | 100% |
-| API | 1 | Growing | 14% (1 of ~7 modules) |
-| Daily Plans | 2 | Active | Current sprint only |
-| Reports | 4 | Mixed | Historical + Current |
+| Deployment | 9 | Current | 100% |
+| API | 7 | Complete | 85% |
+| Daily Plans | 17 | Complete | Days 2-11 |
+| Reports | 8 | Mixed | Historical + Current |
 | Development | 3 | Current | 100% |
+| User Manual | 1 | Current | 100% |
+| Architecture | 1+ | Current | 100% |
 
 ### Quality Metrics
-- **Average Doc Age:** 2-3 days (very fresh)
-- **Outdated Docs:** 1 (STATUS-REPORT-CURRENT.md - Oct 2025)
-- **Missing Docs:** API docs for legacy endpoints
+- **Average Doc Age:** 1-3 days (very fresh)
+- **Outdated Docs:** 0
+- **Missing Docs:** Beds Advanced API, Front Desk API
 - **Documentation Debt:** Low
 
 ### Recent Updates (Last 7 Days)
-- ✅ 7 new documents created (Day 2)
-- ✅ 3 documents updated (README, docs/README, PROJECT-TRACKING)
-- ✅ 2 new directories (04-daily-plans, 05-api)
-- ✅ 1 migration documented (Neon)
+- 7 API documentation files complete
+- 17 daily plan documents
+- Production deployment guides
+- Performance optimization guide
+- Multiple audit reports
 
 ---
 
@@ -456,13 +479,13 @@ Use this to verify documentation is up to date:
 
 ---
 
-**Index Version:** 1.0
+**Index Version:** 2.0
 **Created:** 2025-11-20
-**Last Updated:** 2025-11-20
+**Last Updated:** 2025-11-28
 **Maintained By:** Equipo Almanik PMS
-**Status:** ✅ CURRENT
+**Status:** CURRENT
 
-**Total Documents Indexed:** 35
-**Active Documentation:** 28
-**Archived:** 7
+**Total Documents Indexed:** 65+
+**Active Documentation:** 55+
+**Archived:** 10
 **Coverage:** 100% of current project areas
