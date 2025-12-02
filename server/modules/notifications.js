@@ -34,9 +34,15 @@ function configureVapid() {
   const subject = process.env.VAPID_SUBJECT || 'mailto:admin@almanik.com';
 
   if (publicKey && privateKey) {
-    webpush.setVapidDetails(subject, publicKey, privateKey);
-    vapidConfigured = true;
-    console.log('✅ VAPID configured for push notifications');
+    try {
+      webpush.setVapidDetails(subject, publicKey, privateKey);
+      vapidConfigured = true;
+      console.log('✅ VAPID configured for push notifications');
+    } catch (error) {
+      console.warn('⚠️ VAPID configuration failed:', error.message);
+      console.warn('   Push notifications disabled. Check your VAPID keys.');
+      vapidConfigured = false;
+    }
   } else {
     console.warn('⚠️ VAPID keys not configured. Push notifications disabled.');
     console.warn('   Run: npx web-push generate-vapid-keys');

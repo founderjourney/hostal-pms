@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "server/debug-wrapper.js",
+      "src": "server/server-simple.js",
       "use": "@vercel/node",
       "config": {
         "maxLambdaSize": "50mb",
@@ -13,23 +13,23 @@
   "routes": [
     {
       "src": "/ping",
-      "dest": "/server/debug-wrapper.js"
+      "dest": "/server/server-simple.js"
     },
     {
       "src": "/warmup",
-      "dest": "/server/debug-wrapper.js"
+      "dest": "/server/server-simple.js"
     },
     {
       "src": "/health",
-      "dest": "/server/debug-wrapper.js"
+      "dest": "/server/server-simple.js"
     },
     {
       "src": "/api/(.*)",
-      "dest": "/server/debug-wrapper.js"
+      "dest": "/server/server-simple.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/server/debug-wrapper.js"
+      "dest": "/server/server-simple.js"
     }
   ],
   "env": {
