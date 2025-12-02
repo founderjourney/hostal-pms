@@ -644,6 +644,43 @@ app.get('/api/debug/users', async (req, res) => {
   }
 });
 
+// Debug endpoint to test login (temporary - remove in production)
+app.post('/api/debug/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    console.log('Debug login attempt:', username);
+
+    // Get user
+    const user = await dbAdapter.get(
+      'SELECT id, username, password_hash, role FROM users WHERE username = $1',
+      [username]
+    );
+
+    if (!user) {
+      return res.json({ step: 'user_lookup', error: 'User not found', username });
+    }
+
+    console.log('User found, checking password...');
+
+    // Check password
+    const isValid = await bcrypt.compare(password, user.password_hash);
+
+    res.json({
+      step: 'complete',
+      userFound: true,
+      passwordValid: isValid,
+      role: user.role,
+      hashPrefix: user.password_hash.substring(0, 10)
+    });
+  } catch (err) {
+    res.status(500).json({
+      step: 'error',
+      error: err.message,
+      stack: err.stack
+    });
+  }
+});
+
 // Apply rate limiting to API routes (disabled in development)
 if (process.env.NODE_ENV === 'production') {
   app.use('/api', apiLimiter);
