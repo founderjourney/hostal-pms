@@ -645,10 +645,12 @@ app.get('/api/debug/users', async (req, res) => {
 });
 
 // Debug endpoint to test login (temporary - remove in production)
-app.post('/api/debug/login', async (req, res) => {
+app.get('/api/debug/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
-    console.log('Debug login attempt:', username);
+    const { username, password } = req.query;
+    if (!username || !password) {
+      return res.json({ error: 'Use: /api/debug/login?username=admin&password=xxx' });
+    }
 
     // Get user
     const user = await dbAdapter.get(
@@ -659,8 +661,6 @@ app.post('/api/debug/login', async (req, res) => {
     if (!user) {
       return res.json({ step: 'user_lookup', error: 'User not found', username });
     }
-
-    console.log('User found, checking password...');
 
     // Check password
     const isValid = await bcrypt.compare(password, user.password_hash);
