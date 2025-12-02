@@ -644,6 +644,15 @@ app.get('/api/debug/users', async (req, res) => {
   }
 });
 
+// Debug POST test
+app.post('/api/debug/posttest', (req, res) => {
+  res.json({
+    bodyReceived: req.body,
+    contentType: req.get('Content-Type'),
+    method: req.method
+  });
+});
+
 // Debug endpoint to test login (temporary - remove in production)
 app.get('/api/debug/login', async (req, res) => {
   try {
