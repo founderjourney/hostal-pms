@@ -690,14 +690,7 @@ app.get('/api/debug/login', async (req, res) => {
   }
 });
 
-// Apply rate limiting to API routes (disabled in development)
-if (process.env.NODE_ENV === 'production') {
-  app.use('/api', apiLimiter);
-} else {
-  console.log('⚠️ Rate limiting disabled in development mode');
-}
-
-// Login endpoint (rate limiting temporarily disabled for debugging)
+// Login endpoint MUST be defined BEFORE apiLimiter to avoid rate limit issues
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
