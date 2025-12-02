@@ -688,8 +688,8 @@ if (process.env.NODE_ENV === 'production') {
   console.log('⚠️ Rate limiting disabled in development mode');
 }
 
-// Login endpoint with strict rate limiting
-app.post('/api/login', authLimiter, async (req, res) => {
+// Login endpoint (rate limiting temporarily disabled for debugging)
+app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
