@@ -15,7 +15,7 @@ Revisar sistemáticamente cada módulo/pantalla del sistema para identificar y c
 | # | Módulo | Estado | Prioridad | Notas |
 |---|--------|--------|-----------|-------|
 | 1 | Camas | ✅ REVISADO | Alta | Corregido loop de check-in |
-| 2 | Dashboard | ⏳ Pendiente | Alta | Panel principal |
+| 2 | Dashboard | ✅ REVISADO | Alta | Corregido datos falsos en actividad |
 | 3 | Huéspedes | ⏳ Pendiente | Alta | CRUD + check-in/out |
 | 4 | Ventas (POS) | ⏳ Pendiente | Alta | Punto de venta |
 | 5 | Caja | ⏳ Pendiente | Alta | Movimientos de caja |
@@ -247,13 +247,28 @@ Para cada módulo seguir estos pasos:
 
 ---
 
+### Dashboard - COMPLETADO ✅
+**Fecha:** 2025-12-03
+**Problemas encontrados:**
+1. Sección "Actividad Reciente" mostraba datos falsos/estáticos que confundían al usuario
+2. No existía API para obtener actividad real del sistema
+
+**Correcciones aplicadas:**
+1. Reemplazada función `loadRecentActivity()` con versión async que consulta API real
+2. Agregado mensaje amigable "La actividad se mostrará aquí" cuando no hay datos
+3. Creada API `/api/activity/recent` que consulta tabla `activity_log`
+4. Agregadas funciones helper: `getActivityIcon()`, `formatTimeAgo()`, `showNoActivityMessage()`
+
+**Commit:** `3d259397` - fix(dashboard): replace fake activity data with real API integration
+
+---
+
 ## Próximos Pasos
 
-1. **Iniciar Fase 1** - Módulos críticos
-2. Comenzar con **Dashboard** (más usado)
-3. Continuar con **Huéspedes** (relacionado con Camas)
-4. Seguir con **Ventas (POS)** y **Caja**
-5. Finalizar con **Reservaciones**
+1. ~~Comenzar con **Dashboard** (más usado)~~ ✅
+2. Continuar con **Huéspedes** (relacionado con Camas)
+3. Seguir con **Ventas (POS)** y **Caja**
+4. Finalizar con **Reservaciones**
 
 ---
 
