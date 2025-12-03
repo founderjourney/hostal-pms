@@ -4453,8 +4453,8 @@
 
                 // Pequeño delay para asegurar que la vista se cargue
                 setTimeout(() => {
-                    showGuestModal();
-                    alert('📝 Registra el nuevo huésped.\n\nDespués de guardarlo, vuelve a la sección de Camas y selecciona la cama para asignarle el huésped.');
+                    showAddGuestModal();
+                    // No alert - el modal ya indica claramente la acción
                 }, 300);
             }
 
@@ -4937,8 +4937,9 @@
             async function searchGuests() {
                 const query = document.getElementById('guest-search').value.trim();
 
+                // Si no hay búsqueda, cargar todos
                 if (!query) {
-                    alert('Por favor ingresa un término de búsqueda');
+                    await refreshGuests();
                     return;
                 }
 
@@ -4949,7 +4950,6 @@
                     }
                 } catch (error) {
                     console.error('Error searching guests:', error);
-                    alert('Error al buscar huéspedes');
                 }
             }
 
