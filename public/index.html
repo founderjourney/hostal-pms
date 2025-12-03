@@ -4573,18 +4573,18 @@
                     if (tourId) {
                         // Edit existing tour
                         await apiCall(`/tours/${tourId}`, 'PUT', formData);
-                        alert('Tour actualizado exitosamente');
+                        showNotification('Tour actualizado exitosamente', 'success');
                     } else {
                         // Create new tour
                         await apiCall('/tours', 'POST', formData);
-                        alert('Tour creado exitosamente');
+                        showNotification('Tour creado exitosamente', 'success');
                     }
 
                     closeTourModal();
                     loadTours();
                 } catch (error) {
                     console.error('Error saving tour:', error);
-                    alert('Error al guardar el tour: ' + (error.message || 'Error desconocido'));
+                    showNotification('Error al guardar el tour', 'error');
                 }
             });
 
@@ -4592,10 +4592,10 @@
                 if (confirm('¿Estás seguro de que quieres eliminar esta cama?')) {
                     try {
                         await apiCall(`/beds/${bedId}`, 'DELETE');
-                        alert('Cama eliminada exitosamente');
+                        showNotification('Cama eliminada exitosamente', 'success');
                         refreshBeds();
                     } catch (error) {
-                        alert('Error al eliminar la cama: ' + (error.message || 'Error desconocido'));
+                        showNotification('Error al eliminar la cama', 'error');
                     }
                 }
             }
@@ -5951,18 +5951,14 @@
                     // Open the booking URL in a new window
                     if (tour.booking_url) {
                         window.open(tour.booking_url, '_blank');
-
-                        // Show info about the commission
-                        alert(`✅ Click registrado!\n🎯 Tour: ${tour.name}\n💰 Comisión: ${tour.commission_rate}%\n\nEl huésped será redirigido al proveedor para completar la reserva.`);
-
-                        // Refresh stats
+                        showNotification(`Click registrado - ${tour.name} (${tour.commission_rate}% comisión)`, 'success');
                         loadTours();
                     } else {
-                        alert('URL de reserva no configurada para este tour');
+                        showNotification('URL de reserva no configurada para este tour', 'warning');
                     }
                 } catch (error) {
                     console.error('Error tracking tour click:', error);
-                    alert('Error al registrar el click');
+                    showNotification('Error al registrar el click', 'error');
                 }
             }
 
@@ -6000,11 +5996,11 @@
                 if (confirm('¿Estás seguro de que deseas eliminar este tour?')) {
                     try {
                         await apiCall(`/tours/${tourId}`, 'DELETE');
-                        alert('Tour eliminado exitosamente');
+                        showNotification('Tour eliminado exitosamente', 'success');
                         loadTours();
                     } catch (error) {
                         console.error('Error deleting tour:', error);
-                        alert('Error al eliminar el tour');
+                        showNotification('Error al eliminar el tour', 'error');
                     }
                 }
             }
@@ -6513,29 +6509,14 @@
 
             function renderTourBookings() {
                 const container = document.getElementById('tour-bookings');
-                const bookings = [
-                    { guest: 'María López', tour: 'City Walking Tour', date: 'Hoy 09:00', status: 'confirmado', amount: 50 },
-                    { guest: 'John Smith', tour: 'Beach Day', date: 'Mañana 08:00', status: 'pendiente', amount: 70 },
-                    { guest: 'Ana García', tour: 'Mountain Hike', date: 'Mañana 14:00', status: 'confirmado', amount: 60 }
-                ];
+                if (!container) return;
 
+                // Show empty state - bookings are tracked via tour clicks
                 container.innerHTML = `
-                <div style="display: grid; gap: 10px;">
-                    ${bookings.map(booking => `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.95); box-shadow: 0 8px 32px rgba(0,0,0,0.1); border-radius: 8px;">
-                            <div>
-                                <h4 style="color: #2c3e50; margin: 0 0 5px 0;">${booking.guest}</h4>
-                                <p style="color: #2c3e50; margin: 2px 0;">${booking.tour}</p>
-                                <p style="color: #95a5a6; margin: 2px 0;">${booking.date}</p>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="color: ${booking.status === 'confirmado' ? '#27ae60' : '#f39c12'}; font-weight: bold; margin-bottom: 5px;">
-                                    ${booking.status.toUpperCase()}
-                                </div>
-                                <div style="color: #2c3e50; font-weight: bold;">$${booking.amount}</div>
-                            </div>
-                        </div>
-                    `).join('')}
+                <div style="text-align: center; padding: 30px; color: #7f8c8d;">
+                    <p style="font-size: 40px; margin: 0 0 10px 0;">📊</p>
+                    <p style="margin: 0;">Las reservas se registran mediante clicks en los tours</p>
+                    <p style="margin: 5px 0 0 0; font-size: 12px;">Los clicks quedan registrados para calcular comisiones</p>
                 </div>
             `;
             }
@@ -6566,62 +6547,33 @@
 
                     if (tourId) {
                         await apiCall(`/tours/${tourId}`, 'PUT', data);
-                        alert('Paseo actualizado exitosamente');
+                        showNotification('Paseo actualizado exitosamente', 'success');
                     } else {
                         await apiCall('/tours', 'POST', data);
-                        alert('Paseo creado exitosamente');
+                        showNotification('Paseo creado exitosamente', 'success');
                     }
                     closeTourModal();
                     await loadTours();
                 } catch (error) {
                     console.error('Error saving tour:', error);
-                    alert('Error al guardar el paseo: ' + (error.message || 'Error desconocido'));
+                    showNotification('Error al guardar el paseo', 'error');
                 }
             }
 
             function manageTour(tourId) {
-                // Register a click for the tour
-                apiCall(`/tours/${tourId}/click`, 'POST')
-                    .then(() => {
-                        alert('Click registrado para este tour. El huésped será redirigido al proveedor.');
-                        loadTours();
-                    })
-                    .catch(err => {
-                        console.error('Error registering click:', err);
-                        alert('Error al registrar el click');
-                    });
+                // Register a click for the tour and redirect
+                trackTourClick(tourId);
             }
 
             async function bookTour(tourId) {
-                const guests = await apiCall('/guests');
-                if (!guests || guests.length === 0) {
-                    alert('No hay huéspedes registrados. Primero registra un huésped.');
-                    return;
-                }
-
-                const guestOptions = guests.map((g, i) => `${i + 1}. ${g.name}`).join('\n');
-                const selection = prompt(`Selecciona un huésped para la reserva:\n\n${guestOptions}\n\nIngresa el número:`);
-
-                if (selection && selection > 0 && selection <= guests.length) {
-                    const guest = guests[selection - 1];
-                    const date = prompt('Fecha del tour (YYYY-MM-DD):');
-                    if (date) {
-                        try {
-                            // Register click and create booking (simplified)
-                            await apiCall(`/tours/${tourId}/click`, 'POST');
-                            alert(`Reserva creada para ${guest.name}.\nFecha: ${date}\nClick registrado para comisión.`);
-                            loadTours();
-                        } catch (error) {
-                            alert('Error al crear la reserva');
-                        }
-                    }
-                }
+                // Redirect to trackTourClick which handles the booking flow
+                trackTourClick(tourId);
             }
 
             async function editTour(tourId) {
                 try {
-                    const tours = await apiCall('/tours');
-                    const tour = tours.find(t => t.id === tourId);
+                    const toursData = await apiCall('/tours');
+                    const tour = toursData.find(t => t.id === tourId);
                     if (tour) {
                         document.getElementById('tour-modal').style.display = 'flex';
                         document.getElementById('tour-modal-title').textContent = '✏️ Editar Paseo';
@@ -6635,7 +6587,7 @@
                     }
                 } catch (error) {
                     console.error('Error loading tour:', error);
-                    alert('Error al cargar el paseo');
+                    showNotification('Error al cargar el paseo', 'error');
                 }
             }
 

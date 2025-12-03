@@ -247,6 +247,27 @@
             display: none !important;
         }
 
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 10000;
+            animation: slideUp 0.3s ease;
+        }
+        .toast.success { background: #2ecc71; }
+        .toast.error { background: #e74c3c; }
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
         /* Responsive */
         @media (max-width: 480px) {
             .review-header {
@@ -349,6 +370,19 @@
     </div>
 
     <script>
+        // Toast notification function
+        function showToast(message, type = 'error') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3000);
+        }
+
         // State
         let bookingData = null;
         let mainRating = 0;
@@ -538,7 +572,7 @@
             e.preventDefault();
 
             if (mainRating === 0) {
-                alert('Por favor selecciona una calificacion');
+                showToast('Por favor selecciona una calificación');
                 return;
             }
 
@@ -571,14 +605,14 @@
                 if (result.success) {
                     showState('success');
                 } else {
-                    alert(result.error || 'Error al enviar review');
+                    showToast(result.error || 'Error al enviar review');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Review';
                 }
 
             } catch (error) {
                 console.error('Error submitting review:', error);
-                alert('Error de conexion. Intenta de nuevo.');
+                showToast('Error de conexión. Intenta de nuevo.');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Review';
             }

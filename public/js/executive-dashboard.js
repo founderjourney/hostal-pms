@@ -654,7 +654,7 @@ async function exportToPDF() {
 
     } catch (error) {
         console.error('Error generating PDF:', error);
-        alert('Error al generar PDF. Intente de nuevo.');
+        showToast('Error al generar PDF. Intente de nuevo.', 'error');
     } finally {
         exportBtn.innerHTML = originalText;
         exportBtn.disabled = false;
@@ -666,5 +666,33 @@ async function exportToPDF() {
  */
 function showError(message) {
     console.error(message);
-    // Could add toast notification here
+    showToast(message, 'error');
+}
+
+/**
+ * Toast notification
+ */
+function showToast(message, type = 'info') {
+    const existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        padding: 15px 25px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 500;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.remove(), 3000);
 }
