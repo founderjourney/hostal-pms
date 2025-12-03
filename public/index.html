@@ -1893,7 +1893,11 @@
                                 <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #2c3e50;">Método de pago</label>
                                 <div class="fd-payment-options">
                                     <label class="fd-payment-option">
-                                        <input type="radio" name="qc-payment" value="cash" checked>
+                                        <input type="radio" name="qc-payment" value="transfer" checked>
+                                        <i class="fas fa-university" style="color: #9b59b6;"></i> Transferencia
+                                    </label>
+                                    <label class="fd-payment-option">
+                                        <input type="radio" name="qc-payment" value="cash">
                                         <i class="fas fa-money-bill-wave" style="color: #27ae60;"></i> Efectivo
                                     </label>
                                     <label class="fd-payment-option">
@@ -1940,7 +1944,11 @@
                                 <label>Método</label>
                                 <div class="fd-payment-options">
                                     <label class="fd-payment-option">
-                                        <input type="radio" name="qp-method" value="cash" checked>
+                                        <input type="radio" name="qp-method" value="transfer" checked>
+                                        <i class="fas fa-university" style="color: #9b59b6;"></i> Transferencia
+                                    </label>
+                                    <label class="fd-payment-option">
+                                        <input type="radio" name="qp-method" value="cash">
                                         <i class="fas fa-money-bill-wave" style="color: #27ae60;"></i> Efectivo
                                     </label>
                                     <label class="fd-payment-option">
@@ -1992,10 +2000,13 @@
                                 </div>
                                 <div class="fd-payment-options" style="margin-bottom: 16px;">
                                     <label class="fd-payment-option">
-                                        <input type="radio" name="qco-method" value="cash" checked> Efectivo
+                                        <input type="radio" name="qco-method" value="transfer" checked> 🏦 Transferencia
                                     </label>
                                     <label class="fd-payment-option">
-                                        <input type="radio" name="qco-method" value="card"> Tarjeta
+                                        <input type="radio" name="qco-method" value="cash"> 💵 Efectivo
+                                    </label>
+                                    <label class="fd-payment-option">
+                                        <input type="radio" name="qco-method" value="card"> 💳 Tarjeta
                                     </label>
                                 </div>
                             </div>
@@ -2291,6 +2302,7 @@
 
                             <select id="payment-method"
                                 style="width: 100%; padding: 12px; margin-bottom: 15px; border: none; border-radius: 8px; background: white; color: #2c3e50; font-size: 14px;">
+                                <option value="transfer">🏦 Transferencia</option>
                                 <option value="cash">💵 Efectivo</option>
                                 <option value="card">💳 Tarjeta</option>
                                 <option value="room">🛏️ Cargar a Habitación</option>
@@ -2417,9 +2429,9 @@
                             <div style="margin-bottom: 15px;">
                                 <label style="display: block; font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Método de Pago:</label>
                                 <select id="cash-method" required style="width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 14px;">
+                                    <option value="transfer">🏦 Transferencia</option>
                                     <option value="cash">💵 Efectivo</option>
                                     <option value="card">💳 Tarjeta</option>
-                                    <option value="transfer">🏦 Transferencia</option>
                                 </select>
                             </div>
                             <div style="margin-bottom: 20px;">
