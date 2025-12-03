@@ -2785,6 +2785,24 @@ app.get('/api/dashboard', requireAuth, async (req, res) => {
   }
 });
 
+// Recent Activity API
+app.get('/api/activity/recent', requireAuth, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const activities = await dbAll(`
+      SELECT action_type, module, description, created_at
+      FROM activity_log
+      ORDER BY created_at DESC
+      LIMIT ?
+    `, [limit]);
+
+    res.json(activities);
+  } catch (err) {
+    // If table doesn't exist, return empty array
+    res.json([]);
+  }
+});
+
 // ============================================
 // COMPREHENSIVE ANALYTICS & REPORTS API
 // ============================================

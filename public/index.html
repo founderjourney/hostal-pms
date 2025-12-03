@@ -3669,69 +3669,77 @@
                 });
             }
 
-            // Load recent activity (sample data)
-            function loadRecentActivity() {
-                const activities = [
-                    {
-                        type: 'checkin',
-                        icon: 'fas fa-user-plus',
-                        title: 'Nuevo Check-in',
-                        desc: 'Juan Carlos Pérez se registró en Cama A2',
-                        time: '5 minutos',
-                        gradient: 'checkin'
-                    },
-                    {
-                        type: 'sale',
-                        icon: 'fas fa-shopping-cart',
-                        title: 'Venta POS',
-                        desc: 'Cerveza Águila x2 vendida a Habitación B2',
-                        time: '12 minutos',
-                        gradient: 'sale'
-                    },
-                    {
-                        type: 'payment',
-                        icon: 'fas fa-credit-card',
-                        title: 'Pago Recibido',
-                        desc: '$45.000 pago por Cama A1 - María González',
-                        time: '25 minutos',
-                        gradient: 'payment'
-                    },
-                    {
-                        type: 'checkout',
-                        icon: 'fas fa-user-minus',
-                        title: 'Check-out',
-                        desc: 'Carlos Silva completó check-out de Cama B3',
-                        time: '45 minutos',
-                        gradient: 'checkout'
-                    },
-                    {
-                        type: 'checkin',
-                        icon: 'fas fa-user-plus',
-                        title: 'Nuevo Check-in',
-                        desc: 'Ana Rodríguez se registró en Habitación Privada 1',
-                        time: '1 hora',
-                        gradient: 'checkin'
-                    }
-                ];
-
+            // Load recent activity - shows real activity when available
+            async function loadRecentActivity() {
                 const container = document.getElementById('activity-list');
-                container.innerHTML = '';
 
-                activities.forEach(activity => {
-                    const activityElement = document.createElement('div');
-                    activityElement.className = 'activity-item';
-                    activityElement.innerHTML = `
-                    <div class="activity-icon ${activity.gradient}">
-                        <i class="${activity.icon}"></i>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-title">${activity.title}</div>
-                        <div class="activity-desc">${activity.desc}</div>
-                        <div class="activity-time">hace ${activity.time}</div>
+                try {
+                    // Try to load real activity from API
+                    const response = await apiCall('/activity/recent');
+
+                    if (response && response.length > 0) {
+                        container.innerHTML = '';
+                        response.forEach(activity => {
+                            const activityElement = document.createElement('div');
+                            activityElement.className = 'activity-item';
+                            activityElement.innerHTML = `
+                                <div class="activity-icon ${activity.action_type || 'default'}">
+                                    <i class="fas fa-${getActivityIcon(activity.action_type)}"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">${activity.module || 'Sistema'}</div>
+                                    <div class="activity-desc">${activity.description}</div>
+                                    <div class="activity-time">${formatTimeAgo(activity.created_at)}</div>
+                                </div>
+                            `;
+                            container.appendChild(activityElement);
+                        });
+                    } else {
+                        showNoActivityMessage(container);
+                    }
+                } catch (error) {
+                    // If API doesn't exist yet, show helpful message
+                    showNoActivityMessage(container);
+                }
+            }
+
+            function showNoActivityMessage(container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: #95a5a6;">
+                        <i class="fas fa-history" style="font-size: 48px; margin-bottom: 15px; opacity: 0.5;"></i>
+                        <p style="margin: 0;">La actividad se mostrará aquí</p>
+                        <p style="font-size: 12px; margin-top: 5px;">Check-ins, pagos y ventas recientes</p>
                     </div>
                 `;
-                    container.appendChild(activityElement);
-                });
+            }
+
+            function getActivityIcon(actionType) {
+                const icons = {
+                    'checkin': 'user-plus',
+                    'checkout': 'user-minus',
+                    'payment': 'credit-card',
+                    'sale': 'shopping-cart',
+                    'create': 'plus-circle',
+                    'update': 'edit',
+                    'delete': 'trash',
+                    'complete': 'check-circle'
+                };
+                return icons[actionType] || 'clock';
+            }
+
+            function formatTimeAgo(dateStr) {
+                if (!dateStr) return '';
+                const date = new Date(dateStr);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+
+                if (diffMins < 1) return 'hace un momento';
+                if (diffMins < 60) return `hace ${diffMins} min`;
+                if (diffHours < 24) return `hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
+                return `hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
             }
 
             // Update time
