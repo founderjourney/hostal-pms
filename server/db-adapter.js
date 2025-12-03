@@ -252,6 +252,15 @@ class DatabaseAdapter {
         last_login TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`,
+
+      // Sessions table for serverless-compatible auth
+      `CREATE TABLE IF NOT EXISTS sessions (
+        session_id VARCHAR(50) PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        user_data TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '7 days'
       )`
     ];
 

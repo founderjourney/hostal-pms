@@ -565,7 +565,7 @@ async function createDemoData() {
 
 // AUTH SYSTEM WITH ROLES
 const bcrypt = require('bcryptjs');
-const activeSessions = new Map(); // Store session data
+// Note: Sessions are now stored in the database for serverless compatibility
 
 // Initialize demo users
 async function createDemoUsers() {
@@ -749,16 +749,35 @@ app.post('/api/login', async (req, res) => {
       // Continue anyway
     }
 
-    // Create session
+    // Create session and store in database (serverless-compatible)
     const sessionId = Date.now().toString();
-    activeSessions.set(sessionId, {
+    const sessionData = {
       userId: user.id,
       username: user.username,
       name: user.name,
       role: user.role,
       permissions: JSON.parse(user.permissions || '{}'),
-      loginTime: new Date()
-    });
+      loginTime: new Date().toISOString()
+    };
+
+    try {
+      if (process.env.NODE_ENV === 'production') {
+        // Delete any existing session for this user first
+        await dbAdapter.run('DELETE FROM sessions WHERE user_id = $1', [user.id]);
+        // Insert new session
+        await dbAdapter.run(
+          'INSERT INTO sessions (session_id, user_id, user_data) VALUES ($1, $2, $3)',
+          [sessionId, user.id, JSON.stringify(sessionData)]
+        );
+      } else {
+        // For development, just use memory (local dev doesn't need persistence)
+        if (!global.activeSessions) global.activeSessions = new Map();
+        global.activeSessions.set(sessionId, sessionData);
+      }
+    } catch (sessionErr) {
+      console.error('Session creation error:', sessionErr);
+      // Continue anyway - session might still work
+    }
 
     res.json({
       success: true,
@@ -778,22 +797,56 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-app.post('/api/logout', (req, res) => {
+app.post('/api/logout', async (req, res) => {
   const { sessionId } = req.body;
-  activeSessions.delete(sessionId);
+  try {
+    if (process.env.NODE_ENV === 'production') {
+      await dbAdapter.run('DELETE FROM sessions WHERE session_id = $1', [sessionId]);
+    } else {
+      if (global.activeSessions) global.activeSessions.delete(sessionId);
+    }
+  } catch (err) {
+    console.error('Logout error:', err);
+  }
   res.json({ success: true });
 });
 
-// Auth middleware
-const requireAuth = (req, res, next) => {
+// Auth middleware - uses database for serverless compatibility
+const requireAuth = async (req, res, next) => {
   const sessionId = req.headers['session-id'];
-  const session = activeSessions.get(sessionId);
 
-  if (session) {
-    req.user = session; // Attach user info to request
-    next();
-  } else {
-    res.status(401).json({ error: 'Not authenticated' });
+  if (!sessionId) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  try {
+    let session = null;
+
+    if (process.env.NODE_ENV === 'production') {
+      // Get session from database
+      const result = await dbAdapter.get(
+        'SELECT user_data FROM sessions WHERE session_id = $1 AND expires_at > CURRENT_TIMESTAMP',
+        [sessionId]
+      );
+      if (result && result.user_data) {
+        session = JSON.parse(result.user_data);
+      }
+    } else {
+      // Development: use memory
+      if (global.activeSessions) {
+        session = global.activeSessions.get(sessionId);
+      }
+    }
+
+    if (session) {
+      req.user = session;
+      next();
+    } else {
+      res.status(401).json({ error: 'Not authenticated' });
+    }
+  } catch (err) {
+    console.error('Auth check error:', err);
+    res.status(401).json({ error: 'Authentication error' });
   }
 };
 
