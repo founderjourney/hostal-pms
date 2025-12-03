@@ -5082,7 +5082,7 @@
                 `);
                 } else {
                     actions.push(`
-                    <button onclick="selectGuestForCheckin(${guest.id})"
+                    <button onclick="startCheckinFromGuestsView(${guest.id})"
                             style="${buttonBaseStyle} background: linear-gradient(135deg, #3498db, #2980b9); color: #2c3e50;"
                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(52, 152, 219, 0.4)'"
                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)'">
@@ -6018,16 +6018,15 @@
                 }
             }
 
-            function selectGuestForCheckin(guestId) {
-                // Redirigir a la vista de camas con el huésped seleccionado para check-in
+            function startCheckinFromGuestsView(guestId) {
+                // Desde la vista de huéspedes: guardar el huésped y ir a camas
                 localStorage.setItem('selectedGuestForCheckin', guestId);
                 showView('beds');
-                alert('Ve a la vista de camas y selecciona una cama disponible para hacer el check-in de este huésped');
+                // No mostrar alert - la UI indica visualmente qué hacer
             }
 
             async function startCheckin(bedId, preselectedGuestId = null) {
                 console.log('🛏️ startCheckin called with:', bedId, preselectedGuestId);
-                alert('Check-in iniciando para cama: ' + bedId);
                 try {
                     if (preselectedGuestId) {
                         // Hacer check-in directo con huésped preseleccionado
@@ -6088,7 +6087,6 @@
 
             async function startCheckout(bedId) {
                 console.log('🚪 startCheckout called with:', bedId);
-                alert('Check-out iniciando para cama: ' + bedId);
                 if (confirm('¿Estás seguro de que deseas hacer check-out de esta cama?')) {
                     try {
                         const result = await apiCall(`/beds/${bedId}/checkout`, 'POST');
@@ -6108,13 +6106,27 @@
             function checkPreselectedGuest() {
                 const selectedGuestId = localStorage.getItem('selectedGuestForCheckin');
                 if (selectedGuestId) {
-                    alert('Huésped seleccionado para check-in. Ahora selecciona una cama disponible.');
-                    // Resaltar camas disponibles
-                    const availableBeds = document.querySelectorAll('[data-bed-status="clean"]');
-                    availableBeds.forEach(bed => {
-                        bed.style.animation = 'pulse 2s infinite';
-                    });
+                    // Mostrar notificación sutil en lugar de alert molesto
+                    const notification = document.createElement('div');
+                    notification.id = 'preselected-guest-notification';
+                    notification.innerHTML = `
+                        <div style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);">
+                            <span>👤 Huésped seleccionado. Haz clic en <strong>Check-in</strong> en una cama disponible.</span>
+                            <button onclick="cancelPreselectedGuest()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer;">✕ Cancelar</button>
+                        </div>
+                    `;
+                    const container = document.getElementById('rooms-container');
+                    if (container && !document.getElementById('preselected-guest-notification')) {
+                        container.parentNode.insertBefore(notification, container);
+                    }
                 }
+            }
+
+            function cancelPreselectedGuest() {
+                localStorage.removeItem('selectedGuestForCheckin');
+                const notification = document.getElementById('preselected-guest-notification');
+                if (notification) notification.remove();
+                refreshBeds();
             }
 
             // ============= ANALYTICS & REPORTS FUNCTIONALITY =============
@@ -6625,8 +6637,9 @@
             // Guest selector functions
             window.showGuestSelectorModal = showGuestSelectorModal;
             window.closeGuestSelectorModal = closeGuestSelectorModal;
-            window.selectGuestForCheckin = selectGuestForCheckin;
+            window.startCheckinFromGuestsView = startCheckinFromGuestsView;
             window.registerNewGuestAndReturn = registerNewGuestAndReturn;
+            window.cancelPreselectedGuest = cancelPreselectedGuest;
 
             // ============================================
             // FRONT DESK PANEL - ACCIONES RÁPIDAS 2AM
