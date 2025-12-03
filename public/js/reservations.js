@@ -38,7 +38,7 @@ async function apiRequest(endpoint, options = {}) {
         showAlert('Session expired. Please login again.', 'error');
         // Redirect to login page
         setTimeout(() => {
-            window.location.href = '/login.html';
+            window.location.href = '/';
         }, 2000);
         throw new Error('Unauthorized');
     }

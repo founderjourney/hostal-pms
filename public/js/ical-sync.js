@@ -29,7 +29,7 @@ async function apiRequest(endpoint, options = {}) {
     if (response.status === 401) {
         showAlert('Session expired. Please login again.', 'error');
         setTimeout(() => {
-            window.location.href = '/login.html';
+            window.location.href = '/';
         }, 2000);
         throw new Error('Unauthorized');
     }

@@ -30,7 +30,7 @@ async function apiRequest(endpoint, options = {}) {
 
     if (response.status === 401) {
         alert('Session expired. Please login again.');
-        window.location.href = '/login.html';
+        window.location.href = '/';
         throw new Error('Unauthorized');
     }
 

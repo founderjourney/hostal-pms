@@ -1,9 +1,32 @@
 # 🚀 START HERE - GUÍA DE IMPLEMENTACIÓN DÍA A DÍA
 
 **Sistema:** Almanik PMS
-**Fecha de inicio:** _________
-**Desarrollador:** _________
-**Objetivo:** Sistema 100% funcional en 8-11 semanas
+**Versión:** 1.12.4
+**Estado:** ✅ EN PRODUCCIÓN
+**URL Producción:** https://almanik-pms-viajero.vercel.app
+**Fecha deploy:** 2025-12-02
+
+---
+
+## 🔑 CREDENCIALES DE ACCESO
+
+| Usuario | Contraseña | Rol |
+|---------|------------|-----|
+| admin | admin123 | Administrador |
+| recepcion | recepcion123 | Recepcionista |
+| voluntario | voluntario123 | Voluntario |
+
+---
+
+## 📊 STACK TECNOLÓGICO
+
+- **Frontend:** HTML/CSS/JavaScript (vanilla)
+- **Backend:** Node.js + Express
+- **Base de datos:** PostgreSQL (Neon) en producción / SQLite en desarrollo
+- **Hosting:** Vercel (serverless)
+- **Notificaciones:** Web Push (VAPID)
+
+---
 
 ---
 
@@ -238,7 +261,7 @@ DÍAS 52-56 → FASE 3 Sprint 9: Beds Advanced
 - [ ] O manual: `vercel --prod`
 
 **Paso 10: Verificación Producción (30 min)**
-- [ ] Abrir https://hostal-pms.vercel.app
+- [x] Abrir https://almanik-pms-viajero.vercel.app
 - [ ] Login: admin / admin123
 - [ ] Test completo:
   - [ ] Dashboard carga correctamente
