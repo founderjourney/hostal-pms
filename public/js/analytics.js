@@ -1,7 +1,13 @@
 // Analytics Dashboard - Frontend Logic
-const API_BASE_URL = window.location.origin;
+// Using existing API_BASE_URL if already defined, otherwise set it
+if (typeof API_BASE_URL === 'undefined') {
+    var API_BASE_URL = window.location.origin;
+}
 
-let authToken = localStorage.getItem('authToken');
+// Using var to avoid redeclaration errors when multiple scripts are loaded
+if (typeof authToken === 'undefined') {
+    var authToken = localStorage.getItem('authToken');
+}
 let charts = {};
 
 // API Helper

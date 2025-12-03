@@ -141,7 +141,11 @@ class DatabaseAdapter {
   convertSQL(sql) {
     if (!this.isProduction) return sql;
 
-    return sql
+    // Convert ? placeholders to $1, $2, etc.
+    let paramIndex = 0;
+    let converted = sql.replace(/\?/g, () => `$${++paramIndex}`);
+
+    return converted
       .replace(/INTEGER PRIMARY KEY AUTOINCREMENT/g, 'SERIAL PRIMARY KEY')
       .replace(/DATETIME DEFAULT CURRENT_TIMESTAMP/g, 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP')
       .replace(/DATE\('now'\)/g, 'CURRENT_DATE')

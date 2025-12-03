@@ -1,6 +1,9 @@
 // Reservations Management - Frontend Logic
 // API_BASE_URL should be set based on environment
-const API_BASE_URL = window.location.origin;
+// Using var to avoid redeclaration errors when multiple scripts are loaded
+if (typeof API_BASE_URL === 'undefined') {
+    var API_BASE_URL = window.location.origin;
+}
 
 let allReservations = [];
 let guests = [];
@@ -8,7 +11,10 @@ let beds = [];
 let currentEditId = null;
 
 // Auth token (should be stored securely in production)
-let authToken = localStorage.getItem('authToken');
+// Using var to avoid redeclaration errors when multiple scripts are loaded
+if (typeof authToken === 'undefined') {
+    var authToken = localStorage.getItem('authToken');
+}
 
 // API Helper
 async function apiRequest(endpoint, options = {}) {
