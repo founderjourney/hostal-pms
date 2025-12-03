@@ -16,9 +16,9 @@ Revisar sistemáticamente cada módulo/pantalla del sistema para identificar y c
 |---|--------|--------|-----------|-------|
 | 1 | Camas | ✅ REVISADO | Alta | Corregido loop de check-in |
 | 2 | Dashboard | ✅ REVISADO | Alta | Corregido datos falsos en actividad |
-| 3 | Huéspedes | ⏳ Pendiente | Alta | CRUD + check-in/out |
-| 4 | Ventas (POS) | ⏳ Pendiente | Alta | Punto de venta |
-| 5 | Caja | ⏳ Pendiente | Alta | Movimientos de caja |
+| 3 | Huéspedes | ✅ REVISADO | Alta | Corregido bug showGuestModal |
+| 4 | Ventas (POS) | ✅ REVISADO | Alta | Sin problemas encontrados |
+| 5 | Caja | ✅ REVISADO | Alta | Sin problemas encontrados |
 | 6 | Personal | ⏳ Pendiente | Media | Gestión de staff |
 | 7 | Reportes | ⏳ Pendiente | Media | Analíticas |
 | 8 | Tours/Paseos | ⏳ Pendiente | Baja | Reserva de tours |
@@ -27,7 +27,7 @@ Revisar sistemáticamente cada módulo/pantalla del sistema para identificar y c
 | 11 | WhatsApp | ⏳ Pendiente | Baja | Chat integrado |
 | 12 | Ejecutivo | ⏳ Pendiente | Baja | Dashboard gerencial |
 | 13 | Tareas | ⏳ Pendiente | Media | Gestión de tareas |
-| 14 | Reservaciones | ⏳ Pendiente | Alta | Sistema de reservas |
+| 14 | Reservaciones | ✅ REVISADO | Alta | viewReservation usa alert (mejora pendiente) |
 | 15 | iCal Sync | ⏳ Pendiente | Baja | Sincronización calendarios |
 
 ---
@@ -263,12 +263,77 @@ Para cada módulo seguir estos pasos:
 
 ---
 
-## Próximos Pasos
+### Huéspedes - COMPLETADO ✅
+**Fecha:** 2025-12-03
+**Problemas encontrados:**
+1. Bug: `showGuestModal()` no existía, causaba error JavaScript
+2. Alert innecesariamente largo en `registerNewGuestAndReturn()`
+3. Alert molesto en búsqueda vacía
+
+**Correcciones aplicadas:**
+1. Cambiado `showGuestModal()` a `showAddGuestModal()`
+2. Eliminado alert verbose, el modal ya indica la acción
+3. Búsqueda vacía ahora carga todos los huéspedes en vez de mostrar alert
+
+**Commit:** `b6c4735e` - fix(guests): resolve function call bug and improve UX
+
+---
+
+### Ventas (POS) - COMPLETADO ✅
+**Fecha:** 2025-12-03
+**Problemas encontrados:**
+- Ninguno
+
+**Estado:**
+- Código bien estructurado
+- Funciones únicas sin duplicados
+- Alerts necesarios para la operación (confirmación de venta, carrito vacío, stock)
+- Flujo de usuario claro
+
+---
+
+### Caja - COMPLETADO ✅
+**Fecha:** 2025-12-03
+**Problemas encontrados:**
+- Ninguno
+
+**Estado:**
+- Código bien estructurado con funciones claras
+- `loadCashData()` se ejecuta al navegar a la vista
+- Datos se actualizan correctamente
+- Alerts necesarios para confirmaciones
+
+---
+
+### Reservaciones - COMPLETADO ✅
+**Fecha:** 2025-12-03
+**Problemas encontrados:**
+- `viewReservation()` usa `alert()` para mostrar detalles (debería ser un modal)
+
+**Estado:**
+- Código bien estructurado en archivo separado (reservations.js)
+- Funciones únicas sin duplicados
+- Usa `confirm()` apropiadamente para acciones destructivas
+- Sistema de alertas con `showAlert()` para feedback
+- **Mejora pendiente:** Crear modal para ver detalles de reservación
+
+---
+
+## FASE 1 COMPLETADA ✅
+
+**Resumen:**
+- 5 módulos revisados (Dashboard, Huéspedes, POS, Caja, Reservaciones)
+- 3 bugs corregidos
+- 2 mejoras de UX aplicadas
+- 0 problemas críticos pendientes
+
+## Próximos Pasos - FASE 2
 
 1. ~~Comenzar con **Dashboard** (más usado)~~ ✅
-2. Continuar con **Huéspedes** (relacionado con Camas)
-3. Seguir con **Ventas (POS)** y **Caja**
-4. Finalizar con **Reservaciones**
+2. ~~Continuar con **Huéspedes** (relacionado con Camas)~~ ✅
+3. ~~Seguir con **Ventas (POS)**~~ ✅ y ~~**Caja**~~ ✅
+4. ~~Finalizar con **Reservaciones**~~ ✅
+5. **Siguiente:** Personal, Usuarios, Reportes, Tareas (Fase 2)
 
 ---
 
