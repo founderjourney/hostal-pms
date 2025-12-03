@@ -51,8 +51,14 @@ async function apiRequest(endpoint, options = {}) {
     return response.json();
 }
 
-// Initialize
+// Initialize - only if user is authenticated
 document.addEventListener('DOMContentLoaded', async () => {
+    // Don't run if no auth token (user not logged in yet)
+    if (!authToken) {
+        console.log('No auth token, skipping reservations initialization');
+        return;
+    }
+
     await loadInitialData();
     await loadReservations();
 
