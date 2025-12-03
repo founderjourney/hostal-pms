@@ -19,14 +19,14 @@ Revisar sistemáticamente cada módulo/pantalla del sistema para identificar y c
 | 3 | Huéspedes | ✅ REVISADO | Alta | Corregido bug showGuestModal |
 | 4 | Ventas (POS) | ✅ REVISADO | Alta | Sin problemas encontrados |
 | 5 | Caja | ✅ REVISADO | Alta | Sin problemas encontrados |
-| 6 | Personal | ⏳ Pendiente | Media | Gestión de staff |
-| 7 | Reportes | ⏳ Pendiente | Media | Analíticas |
+| 6 | Personal | ✅ REVISADO | Media | Corregido datos estáticos y alerts |
+| 7 | Reportes | ✅ REVISADO | Media | Corregido 4 alerts |
 | 8 | Tours/Paseos | ⏳ Pendiente | Baja | Reserva de tours |
-| 9 | Usuarios | ⏳ Pendiente | Media | Admin de usuarios |
+| 9 | Usuarios | ✅ REVISADO | Media | Corregido alerts de "En desarrollo" |
 | 10 | Reviews | ⏳ Pendiente | Baja | Sistema de reseñas |
 | 11 | WhatsApp | ⏳ Pendiente | Baja | Chat integrado |
 | 12 | Ejecutivo | ⏳ Pendiente | Baja | Dashboard gerencial |
-| 13 | Tareas | ⏳ Pendiente | Media | Gestión de tareas |
+| 13 | Tareas | ✅ REVISADO | Media | Sin problemas encontrados |
 | 14 | Reservaciones | ✅ REVISADO | Alta | viewReservation usa alert (mejora pendiente) |
 | 15 | iCal Sync | ⏳ Pendiente | Baja | Sincronización calendarios |
 
@@ -319,6 +319,81 @@ Para cada módulo seguir estos pasos:
 
 ---
 
+## FASE 2: Módulos de Gestión
+
+### Personal (Staff) - COMPLETADO ✅
+**Fecha:** 2025-12-03
+**Problemas encontrados:**
+1. Datos estáticos falsos en secciones "Turno Actual" y "Próximo Turno" (mostraban nombres ficticios)
+2. Múltiples `alert()` en funciones de staff (crear, editar, eliminar empleado)
+
+**Correcciones aplicadas:**
+1. Reemplazada sección "Turno Actual" con carga dinámica desde API `/staff/attendance/today`
+2. Reemplazada sección "Próximo Turno" con "Estadísticas de Personal" desde API `/staff/stats`
+3. Creada función `loadStaffViewData()` que carga turnos, stats y lista de staff
+4. Cambiada llamada en `showView()` de `loadStaff()` a `loadStaffViewData()`
+5. Reemplazados 4 `alert()` por `showNotification()` en funciones de staff
+
+**Estado:**
+- Código de staff.html bien estructurado (usa `showToast()`)
+- Código de index.html corregido para usar `showNotification()`
+
+---
+
+### Usuarios - COMPLETADO ✅
+**Fecha:** 2025-12-03
+**Problemas encontrados:**
+1. `showAddUserModal()` usaba `alert()` con "En desarrollo"
+2. `editUser()` usaba `alert()` con "En desarrollo"
+
+**Correcciones aplicadas:**
+1. Reemplazados ambos `alert()` por `showNotification()` con tipo 'info'
+
+**Estado:**
+- Funciones de crear/editar usuario aún en desarrollo
+- Lista de usuarios carga correctamente
+
+---
+
+### Reportes - COMPLETADO ✅
+**Fecha:** 2025-12-03
+**Problemas encontrados:**
+1. 4 usos de `alert()` en funciones de reportes
+
+**Correcciones aplicadas:**
+1. `generateAnalyticsReport()` - error alert → `showNotification()` error
+2. `exportAnalyticsReport()` - 3 alerts reemplazados por `showNotification()`
+
+**Estado:**
+- Sistema de reportes funcional
+- Exportación a JSON funciona
+
+---
+
+### Tareas - COMPLETADO ✅
+**Fecha:** 2025-12-03
+**Problemas encontrados:**
+- Ninguno
+
+**Estado:**
+- Código bien estructurado en archivo separado (tasks.js)
+- Usa `showToast()` para todas las notificaciones
+- Usa `confirm()` apropiadamente para acciones destructivas
+- Kanban board funciona correctamente
+- Solo usa `prompt()` para notas opcionales de completación
+
+---
+
+## FASE 2 COMPLETADA ✅
+
+**Resumen FASE 2:**
+- 4 módulos revisados (Personal, Usuarios, Reportes, Tareas)
+- 11 alerts corregidos
+- 1 módulo con datos estáticos falsos corregido (Personal)
+- 0 bugs críticos
+
+---
+
 ## FASE 1 COMPLETADA ✅
 
 **Resumen:**
@@ -327,13 +402,24 @@ Para cada módulo seguir estos pasos:
 - 2 mejoras de UX aplicadas
 - 0 problemas críticos pendientes
 
-## Próximos Pasos - FASE 2
+## Próximos Pasos - FASE 3 PENDIENTE
 
+**FASE 1 y FASE 2 completadas:**
 1. ~~Comenzar con **Dashboard** (más usado)~~ ✅
 2. ~~Continuar con **Huéspedes** (relacionado con Camas)~~ ✅
 3. ~~Seguir con **Ventas (POS)**~~ ✅ y ~~**Caja**~~ ✅
 4. ~~Finalizar con **Reservaciones**~~ ✅
-5. **Siguiente:** Personal, Usuarios, Reportes, Tareas (Fase 2)
+5. ~~**Personal**~~ ✅
+6. ~~**Usuarios**~~ ✅
+7. ~~**Reportes**~~ ✅
+8. ~~**Tareas**~~ ✅
+
+**FASE 3 pendiente (baja prioridad):**
+- Tours/Paseos
+- Reviews
+- WhatsApp
+- Ejecutivo
+- iCal Sync
 
 ---
 
