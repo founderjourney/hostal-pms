@@ -1,6 +1,6 @@
 # ALMANIK PMS - COMPLETE DOCUMENTATION INDEX
 
-**Last Updated:** 2025-11-28
+**Last Updated:** 2025-12-03
 **Total Documents:** 65+
 **Coverage:** All project areas
 **Version:** 1.12.4
@@ -424,6 +424,27 @@
 
 ---
 
+## 🔍 QA & UX REVIEW
+
+### Plan de Revisión UX
+| File | Purpose | Status | Date |
+|------|---------|--------|------|
+| `PLAN-REVISION-UX.md` | Plan sistemático de revisión de todos los módulos | **ACTIVO** | 2025-12-03 |
+
+**Objetivo:** Revisar cada módulo/pantalla del sistema para identificar y corregir:
+- Bugs de funcionalidad
+- Problemas de UX (alerts molestos, flujos confusos)
+- Funciones duplicadas o conflictivas
+- APIs que no funcionan correctamente
+
+**Progreso:**
+- ✅ Camas - Revisado y corregido (loop de check-in)
+- ⏳ 14 módulos pendientes
+
+**Siguiente:** Dashboard → Huéspedes → POS → Caja → Reservaciones
+
+---
+
 ## 🔮 FUTURE DOCUMENTATION NEEDS
 
 ### Planned Documentation (Priority Order)
@@ -481,7 +502,7 @@ Use this to verify documentation is up to date:
 
 **Index Version:** 2.0
 **Created:** 2025-11-20
-**Last Updated:** 2025-11-28
+**Last Updated:** 2025-12-03
 **Maintained By:** Equipo Almanik PMS
 **Status:** CURRENT
 
