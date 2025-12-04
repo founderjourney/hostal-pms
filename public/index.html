@@ -3077,7 +3077,19 @@
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <!-- Checkbox Voluntario -->
+                    <div style="background: linear-gradient(135deg, #f39c12, #e67e22); padding: 15px; border-radius: 10px; margin: 5px 0;">
+                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; color: white;">
+                            <input type="checkbox" id="staff-is-volunteer" onchange="toggleVolunteerMode(this.checked)"
+                                style="width: 22px; height: 22px; cursor: pointer; accent-color: #27ae60;">
+                            <div>
+                                <span style="font-weight: bold; font-size: 16px;">Es Voluntario (Work Exchange)</span>
+                                <p style="margin: 3px 0 0 0; font-size: 12px; opacity: 0.9;">Los voluntarios no reciben salario, trabajan a cambio de alojamiento</p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div id="staff-salary-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div>
                             <label style="color: #2c3e50; display: block; margin-bottom: 5px;">Salario (COP):</label>
                             <input type="number" id="staff-salary" placeholder="1200000"
@@ -4524,13 +4536,15 @@
             document.getElementById('staff-form').addEventListener('submit', async function (e) {
                 e.preventDefault();
 
+                const isVolunteer = document.getElementById('staff-is-volunteer').checked;
                 const formData = {
                     name: document.getElementById('staff-name').value,
                     position: document.getElementById('staff-position').value,
                     phone: document.getElementById('staff-phone').value,
                     email: document.getElementById('staff-email').value,
-                    salary: parseFloat(document.getElementById('staff-salary').value) || null,
-                    schedule: document.getElementById('staff-schedule').value
+                    salary: isVolunteer ? null : (parseFloat(document.getElementById('staff-salary').value) || null),
+                    schedule: document.getElementById('staff-schedule').value,
+                    is_volunteer: isVolunteer
                 };
 
                 try {
@@ -5646,9 +5660,10 @@
 
                             <div style="display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center;">
                                 <div>
-                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
                                         <h4 style="color: #2c3e50; margin: 0; font-size: 18px; font-weight: bold;">${member.name}</h4>
                                         <span style="background: linear-gradient(135deg, #e8f4fd, #d4e6f1); color: #3498db; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">${member.position}</span>
+                                        ${member.is_volunteer ? `<span style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 4px;">🤝 Voluntario</span>` : ''}
                                     </div>
 
                                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 15px;">
@@ -5717,6 +5732,8 @@
                 document.getElementById('staff-modal-title').textContent = 'Nuevo Empleado';
                 document.getElementById('staff-form').reset();
                 document.getElementById('staff-form').removeAttribute('data-staff-id');
+                // Reset volunteer mode for new staff
+                toggleVolunteerMode(false);
                 document.getElementById('staff-modal').style.display = 'flex';
             }
 
@@ -5734,12 +5751,38 @@
                 document.getElementById('staff-salary').value = member.salary || '';
                 document.getElementById('staff-schedule').value = member.schedule || '';
 
+                // Load volunteer status and toggle salary visibility
+                const isVolunteer = member.is_volunteer || false;
+                toggleVolunteerMode(isVolunteer);
+
                 document.getElementById('staff-modal').style.display = 'flex';
             }
 
             function closeStaffModal() {
                 document.getElementById('staff-modal').style.display = 'none';
                 document.getElementById('staff-form').reset();
+                // Reset volunteer mode when closing
+                toggleVolunteerMode(false);
+            }
+
+            function toggleVolunteerMode(isVolunteer) {
+                const salaryContainer = document.getElementById('staff-salary-container');
+                const salaryInput = document.getElementById('staff-salary');
+                const checkbox = document.getElementById('staff-is-volunteer');
+
+                if (isVolunteer) {
+                    salaryContainer.style.display = 'none';
+                    salaryInput.value = '';
+                    salaryInput.required = false;
+                } else {
+                    salaryContainer.style.display = 'grid';
+                    salaryInput.required = false;
+                }
+
+                // Sync checkbox state
+                if (checkbox) {
+                    checkbox.checked = isVolunteer;
+                }
             }
 
             async function deleteStaff(staffId) {
