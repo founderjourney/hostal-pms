@@ -5588,8 +5588,10 @@
                 try {
                     const response = await apiCall('/staff');
                     if (response) {
-                        staff = response;
-                        renderStaffList(response);
+                        // Handle both formats: array directly or {success, staff: [...]}
+                        const staffData = Array.isArray(response) ? response : (response.staff || []);
+                        staff = staffData;
+                        renderStaffList(staffData);
                     }
                 } catch (error) {
                     console.error('Error loading staff:', error);
