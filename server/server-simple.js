@@ -3350,15 +3350,18 @@ app.get('/api/staff', requireAuth, async (req, res) => {
 // Add new staff member
 app.post('/api/staff', requireAuth, async (req, res) => {
   try {
-    const { name, position, phone, email, salary, schedule } = req.body;
+    const { name, position, phone, email, salary, schedule, is_volunteer } = req.body;
 
     if (!name || !position) {
       return res.status(400).json({ error: 'Name and position are required' });
     }
 
+    const volunteerValue = is_volunteer ? true : false;
+    const finalSalary = volunteerValue ? null : salary;
+
     const result = await dbRun(
-      'INSERT INTO staff (name, position, phone, email, salary, schedule) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, position, phone, email, salary, schedule]
+      'INSERT INTO staff (name, position, phone, email, salary, schedule, is_volunteer) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, position, phone, email, finalSalary, schedule, volunteerValue]
     );
 
     const newStaff = await dbGet('SELECT * FROM staff WHERE id = ?', [result.id]);
@@ -3372,11 +3375,14 @@ app.post('/api/staff', requireAuth, async (req, res) => {
 app.put('/api/staff/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, position, phone, email, salary, schedule } = req.body;
+    const { name, position, phone, email, salary, schedule, is_volunteer } = req.body;
+
+    const volunteerValue = is_volunteer ? true : false;
+    const finalSalary = volunteerValue ? null : salary;
 
     await dbRun(
-      'UPDATE staff SET name = ?, position = ?, phone = ?, email = ?, salary = ?, schedule = ? WHERE id = ?',
-      [name, position, phone, email, salary, schedule, id]
+      'UPDATE staff SET name = ?, position = ?, phone = ?, email = ?, salary = ?, schedule = ?, is_volunteer = ? WHERE id = ?',
+      [name, position, phone, email, finalSalary, schedule, volunteerValue, id]
     );
 
     const updatedStaff = await dbGet('SELECT * FROM staff WHERE id = ?', [id]);
