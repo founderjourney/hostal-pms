@@ -589,6 +589,53 @@ Para cada módulo seguir estos pasos:
 
 ---
 
+## Funcionalidades Adicionales Implementadas
+
+### Fix Lista de Personal - COMPLETADO ✅
+**Fecha:** 2025-12-03
+**Problema encontrado:**
+- La lista de empleados no se mostraba a pesar de que las estadísticas mostraban "4 empleados activos"
+- El backend devolvía `{success: true, staff: [...]}` pero el frontend esperaba un array directamente
+
+**Corrección aplicada:**
+1. Modificada función `loadStaff()` para manejar ambos formatos de respuesta
+2. Ahora detecta si la respuesta es array o objeto con propiedad `staff`
+
+**Commit:** `81789166` - fix: handle both array and object response formats in loadStaff
+
+---
+
+### Sistema de Voluntarios (Work Exchange) - COMPLETADO ✅
+**Fecha:** 2025-12-03
+**Funcionalidad nueva:**
+- Tag de voluntario que puede asignarse a cualquier empleado sin importar su rol
+- Los voluntarios trabajan a cambio de alojamiento, no reciben salario
+
+**Implementación Frontend (`public/index.html`):**
+1. Checkbox "Es Voluntario (Work Exchange)" en formulario de staff (línea 3081)
+2. Función `toggleVolunteerMode()` que oculta/muestra campo de salario (línea 5759)
+3. Submit handler modificado para enviar `is_volunteer` al backend (línea 4539)
+4. `showEditStaffModal()` carga estado de voluntario al editar (línea 5753)
+5. `showAddStaffModal()` reinicia estado de voluntario (línea 5734)
+6. Badge naranja "🤝 Voluntario" visible en tarjetas de staff (línea 5666)
+
+**Implementación Backend (`server/server-simple.js`):**
+1. INSERT de staff ahora incluye campo `is_volunteer` (línea 3363)
+2. UPDATE de staff ahora incluye campo `is_volunteer` (línea 3384)
+3. Si es voluntario, el salario se guarda como `null` automáticamente
+
+**Commits:**
+- `bfd46e51` - feat(staff): add volunteer tag system for work exchange
+- `941652cd` - fix(staff): add is_volunteer field to INSERT and UPDATE queries
+
+**UX:**
+- Checkbox con gradiente naranja distintivo
+- Al marcar voluntario, campo de salario se oculta automáticamente
+- Badge visible en la tarjeta sin necesidad de hacer click
+- Funciona con cualquier cargo (Recepcionista, Limpieza, etc.)
+
+---
+
 ## Notas Importantes
 
 - Siempre hacer backup antes de cambios grandes
@@ -600,4 +647,4 @@ Para cada módulo seguir estos pasos:
 ---
 
 *Documento creado: 2025-12-03*
-*Última actualización: 2025-12-03*
+*Última actualización: 2025-12-03 (Sistema de Voluntarios completado)*
