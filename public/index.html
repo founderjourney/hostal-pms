@@ -1266,6 +1266,247 @@
                 font-size: 28px;
             }
         }
+
+        /* ============================================
+           DEV4 - MEJORAS DE UX Y CONTRASTE
+           Tarea 8, 10, 14
+           ============================================ */
+
+        /* CSS Variables para colores con mejor contraste WCAG 2.1 */
+        :root {
+            --color-primary: #2563eb;
+            --color-primary-dark: #1d4ed8;
+            --color-success: #16a34a;
+            --color-success-dark: #15803d;
+            --color-danger: #dc2626;
+            --color-danger-dark: #b91c1c;
+            --color-warning: #d97706;
+            --color-warning-dark: #b45309;
+            --color-info: #0891b2;
+            --color-text-light: #ffffff;
+            --color-text-dark: #1f2937;
+        }
+
+        /* TAREA 8: Boton X de cerrar modales - MAS VISIBLE */
+        .modal-close-btn,
+        .fd-modal-close,
+        [class*="modal"] .close,
+        [class*="modal"] [class*="close"],
+        button[onclick*="close"]:not(.nav-button) {
+            background: #dc2626 !important;
+            color: #ffffff !important;
+            width: 40px !important;
+            height: 40px !important;
+            min-width: 40px !important;
+            min-height: 40px !important;
+            border-radius: 50% !important;
+            font-size: 24px !important;
+            font-weight: bold !important;
+            border: 2px solid #ffffff !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.2s ease !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+            line-height: 1 !important;
+        }
+
+        .modal-close-btn:hover,
+        .fd-modal-close:hover,
+        [class*="modal"] .close:hover,
+        [class*="modal"] [class*="close"]:hover,
+        button[onclick*="close"]:not(.nav-button):hover {
+            background: #b91c1c !important;
+            transform: scale(1.1) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+        }
+
+        /* TAREA 10: Mejora de contraste en botones con gradiente */
+        /* Forzar texto blanco en botones de colores */
+        button[style*="gradient"],
+        .btn-primary,
+        .btn-success,
+        .btn-danger,
+        .btn-warning {
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* Botones de accion con mejor contraste */
+        .action-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            color: #ffffff;
+        }
+
+        .action-btn-primary {
+            background: var(--color-primary);
+        }
+        .action-btn-primary:hover {
+            background: var(--color-primary-dark);
+        }
+
+        .action-btn-success {
+            background: var(--color-success);
+        }
+        .action-btn-success:hover {
+            background: var(--color-success-dark);
+        }
+
+        .action-btn-danger {
+            background: var(--color-danger);
+        }
+        .action-btn-danger:hover {
+            background: var(--color-danger-dark);
+        }
+
+        .action-btn-warning {
+            background: var(--color-warning);
+            color: #1f2937;
+        }
+        .action-btn-warning:hover {
+            background: var(--color-warning-dark);
+        }
+
+        /* TAREA 14: Estilos consistentes para modales */
+        /* Header de modal con mejor contraste */
+        [class*="modal-header"],
+        .fd-modal-header {
+            position: relative;
+        }
+
+        [class*="modal-header"] h2,
+        [class*="modal-header"] h3,
+        .fd-modal-header h2 {
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        /* Badges de estado con mejor contraste */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.available,
+        .status-badge.clean {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #16a34a;
+        }
+
+        .status-badge.occupied {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #dc2626;
+        }
+
+        .status-badge.dirty {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1px solid #d97706;
+        }
+
+        .status-badge.maintenance {
+            background: #e5e7eb;
+            color: #374151;
+            border: 1px solid #6b7280;
+        }
+
+        /* Indicadores clickeables en dashboard */
+        .stat-card {
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .stat-card:active {
+            transform: translateY(-2px);
+        }
+
+        /* Labels de campos obligatorios */
+        label[for]:has(+ input[required])::after,
+        label.required::after {
+            content: " *";
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        /* Campo con error */
+        .field-error {
+            border-color: #dc2626 !important;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2) !important;
+        }
+
+        /* Mensaje de error */
+        .error-message {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .error-message::before {
+            content: "⚠";
+        }
+
+        /* Mejora de legibilidad en tablas */
+        table th {
+            background: #f8fafc;
+            color: #1f2937;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        table td {
+            color: #374151;
+        }
+
+        table tr:hover td {
+            background: #f1f5f9;
+        }
+
+        /* Focus visible para accesibilidad */
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible,
+        a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 2px;
+        }
+
+        /* Tooltips con mejor contraste */
+        [title] {
+            position: relative;
+        }
+
+        /* Scroll suave */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* ============================================
+           FIN DEV4 - MEJORAS DE UX Y CONTRASTE
+           ============================================ */
+
     </style>
 </head>
 
@@ -1385,7 +1626,7 @@
 
                 <!-- STATS GRID -->
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="showBedsFiltered('occupied')" title="Ver camas ocupadas">
                         <div class="stat-header">
                             <div>
                                 <div class="stat-number" id="occupied-count">12</div>
@@ -1403,7 +1644,7 @@
                         </div>
                     </div>
 
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="showBedsFiltered('clean')" title="Ver camas disponibles">
                         <div class="stat-header">
                             <div>
                                 <div class="stat-number" id="clean-count">8</div>
@@ -1421,7 +1662,7 @@
                         </div>
                     </div>
 
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="showBedsFiltered('dirty')" title="Ver camas por limpiar">
                         <div class="stat-header">
                             <div>
                                 <div class="stat-number" id="dirty-count">3</div>
@@ -1439,7 +1680,7 @@
                         </div>
                     </div>
 
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="showView('cash')" title="Ver caja">
                         <div class="stat-header">
                             <div>
                                 <div class="stat-number" id="revenue-amount">$122.000</div>
@@ -3773,6 +4014,21 @@
                 document.getElementById('current-date').textContent = dateString;
             }
 
+            // Variable global para filtro de camas desde dashboard
+            let currentBedFilter = null;
+
+            // Función para mostrar camas con filtro desde dashboard
+            function showBedsFiltered(filterType) {
+                currentBedFilter = filterType;
+                showView('beds');
+            }
+
+            // Limpiar filtro de camas
+            function clearBedFilter() {
+                currentBedFilter = null;
+                refreshBeds();
+            }
+
             // Navigation
             function showView(viewName) {
                 // Close mobile sidebar when navigation item is clicked
@@ -3952,6 +4208,26 @@
                     });
                 });
 
+                // Mostrar indicador de filtro activo si hay uno
+                if (currentBedFilter) {
+                    const filterLabels = {
+                        'occupied': 'Ocupadas',
+                        'clean': 'Disponibles',
+                        'dirty': 'Por Limpiar',
+                        'maintenance': 'Mantenimiento',
+                        'reserved': 'Reservadas'
+                    };
+                    const filterDiv = document.createElement('div');
+                    filterDiv.style.cssText = 'background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 12px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(52,152,219,0.3);';
+                    filterDiv.innerHTML = `
+                        <span><i class="fas fa-filter"></i> Filtrando: <strong>${filterLabels[currentBedFilter] || currentBedFilter}</strong></span>
+                        <button onclick="clearBedFilter()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                            <i class="fas fa-times"></i> Quitar filtro
+                        </button>
+                    `;
+                    container.appendChild(filterDiv);
+                }
+
                 // Helper para formatear fechas
                 const formatDate = (dateStr) => {
                     if (!dateStr) return '';
@@ -3964,15 +4240,26 @@
                 // Helper para verificar si checkout es hoy o mañana
                 const getCheckoutAlert = (checkOut) => {
                     if (!checkOut) return '';
-                    const today = new Date().toISOString().split('T')[0];
-                    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    const todayDate = new Date();
+                    const tomorrowDate = new Date();
+                    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+                    const today = formatDateToInput(todayDate);
+                    const tomorrow = formatDateToInput(tomorrowDate);
                     if (checkOut === today) return '<span style="background: #e74c3c; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px;">HOY</span>';
                     if (checkOut === tomorrow) return '<span style="background: #f39c12; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px;">MAÑANA</span>';
                     return '';
                 };
 
                 Object.keys(bedsByRoom).forEach(roomName => {
-                    const beds = bedsByRoom[roomName];
+                    // Aplicar filtro si está activo
+                    let beds = bedsByRoom[roomName];
+                    if (currentBedFilter) {
+                        beds = beds.filter(bed => bed.status === currentBedFilter);
+                    }
+
+                    // Saltar habitación si no tiene camas que mostrar
+                    if (beds.length === 0) return;
+
                     const roomDiv = document.createElement('div');
                     roomDiv.style.marginBottom = '30px';
 
@@ -4054,6 +4341,12 @@
                                             <span style="font-size: 12px;">✅</span>
                                             Disponible | $${bed.price}/noche
                                         </p>
+                                        ${bed.notes ? `
+                                            <p style="color: #7f8c8d; margin: 5px 0; display: flex; align-items: flex-start; gap: 8px; font-size: 12px;" title="${bed.notes.replace(/"/g, '&quot;')}">
+                                                <span style="font-size: 12px;">📝</span>
+                                                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">${bed.notes.length > 50 ? bed.notes.substring(0, 50) + '...' : bed.notes}</span>
+                                            </p>
+                                        ` : ''}
                                     ` : ''}
 
                                     ${bed.status === 'dirty' ? `
@@ -4350,10 +4643,8 @@
                 try {
                     if (currentEditingBed) {
                         await apiCall(`/beds/${currentEditingBed.id}`, 'PUT', formData);
-                        alert('Cama actualizada exitosamente');
                     } else {
                         await apiCall('/beds', 'POST', formData);
-                        alert('Cama creada exitosamente');
                     }
 
                     closeBedModal();
@@ -4437,11 +4728,9 @@
                             guest_id: guestId,
                             reserved_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 7 días por defecto
                         });
-                        alert(`📅 Reserva exitosa!\n\nHuésped: ${guestName}\nCama reservada correctamente.`);
                     } else {
                         // Para ocupar: usar endpoint de checkin
                         await apiCall(`/beds/${pendingCheckinBedId}/checkin`, 'POST', { guestId: guestId });
-                        alert(`✅ Check-in exitoso!\n\nHuésped: ${guestName}\nCama asignada correctamente.`);
                     }
 
                     closeGuestSelectorModal();
@@ -4486,11 +4775,9 @@
                     if (guestId) {
                         // Editar huésped existente
                         await apiCall(`/guests/${guestId}`, 'PUT', formData);
-                        alert('Huésped actualizado exitosamente');
                     } else {
                         // Crear nuevo huésped
                         await apiCall('/guests', 'POST', formData);
-                        alert('Huésped creado exitosamente');
                     }
 
                     closeGuestModal();
@@ -4517,11 +4804,9 @@
                     if (productId) {
                         // Edit existing product
                         await apiCall(`/products/${productId}`, 'PUT', formData);
-                        alert('Producto actualizado exitosamente');
                     } else {
                         // Create new product
                         await apiCall('/products', 'POST', formData);
-                        alert('Producto creado exitosamente');
                     }
 
                     closeProductModal();
@@ -5333,7 +5618,6 @@
                         total: total
                     });
 
-                    alert(`✅ Venta procesada exitosamente!\n💰 Total: $${total.toLocaleString()}\n💳 Método: ${getPaymentMethodName(paymentMethod)}`);
                     cart = [];
                     updateCartDisplay();
                     loadProducts(); // Refresh to update stock
@@ -5384,7 +5668,6 @@
                 if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
                     try {
                         await apiCall(`/products/${productId}`, 'DELETE');
-                        alert('Producto eliminado exitosamente');
                         loadProducts();
                     } catch (error) {
                         console.error('Error deleting product:', error);
@@ -5526,7 +5809,6 @@
                 try {
                     const result = await apiCall(`/guests/${guestId}`, 'DELETE');
                     if (result) {
-                        alert('Huésped eliminado exitosamente');
                         closeGuestDetailsModal();
                         await refreshGuests();
                     }
@@ -6071,7 +6353,6 @@
                     };
 
                     await apiCall('/cashbox/transactions', 'POST', data);
-                    alert('Movimiento registrado exitosamente');
                     closeCashModal();
                     await loadCashData();
                 } catch (error) {
@@ -6174,7 +6455,6 @@
                 try {
                     const result = await apiCall(`/beds/${bedId}/checkin`, 'POST', { guestId });
                     if (result) {
-                        alert('Check-in realizado exitosamente');
                         localStorage.removeItem('selectedGuestForCheckin');
                         await refreshBeds();
                         await refreshGuests();
@@ -6191,7 +6471,6 @@
                     try {
                         const result = await apiCall(`/beds/${bedId}/checkout`, 'POST');
                         if (result) {
-                            alert('Check-out realizado exitosamente');
                             await refreshBeds();
                             await refreshGuests();
                         }
@@ -6930,10 +7209,18 @@
                 const total = price * nights;
                 document.getElementById('qc-total').textContent = `$${total.toLocaleString()}`;
 
-                // Actualizar fecha de checkout
+                // Actualizar fecha de checkout usando fecha local (evita problemas de timezone)
                 const checkout = new Date();
                 checkout.setDate(checkout.getDate() + nights);
-                document.getElementById('qc-checkout-date').value = checkout.toISOString().split('T')[0];
+                document.getElementById('qc-checkout-date').value = formatDateToInput(checkout);
+            }
+
+            // Helper para formatear fecha a formato input (YYYY-MM-DD) sin problemas de timezone
+            function formatDateToInput(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
             }
 
             // Event listener para cambio de cama

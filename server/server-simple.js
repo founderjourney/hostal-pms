@@ -93,6 +93,33 @@ const dbRun = async (sql, params = []) => {
   return await dbAdapter.run(dbAdapter.convertSQL(sql), params);
 };
 
+/**
+ * Execute operations within an atomic transaction
+ * If any operation fails, all changes are rolled back
+ * @param {Function} callback - Receives { txGet, txAll, txRun } for transaction-scoped queries
+ * @returns {Promise<any>} Result of the callback
+ */
+const dbTransaction = async (callback) => {
+  return await dbAdapter.transaction(async ({ txQuery, txGet, txRun }) => {
+    // Wrap transaction functions to convert SQL
+    const wrappedTxGet = async (sql, params = []) => {
+      return await txGet(dbAdapter.convertSQL(sql), params);
+    };
+    const wrappedTxAll = async (sql, params = []) => {
+      return await txQuery(dbAdapter.convertSQL(sql), params);
+    };
+    const wrappedTxRun = async (sql, params = []) => {
+      return await txRun(dbAdapter.convertSQL(sql), params);
+    };
+
+    return await callback({
+      txGet: wrappedTxGet,
+      txAll: wrappedTxAll,
+      txRun: wrappedTxRun
+    });
+  });
+};
+
 // Activity logging helper function
 async function logActivity(actionType, module, description, userId = null, entityId = null, entityType = null, details = null, ipAddress = null) {
   try {
@@ -1685,16 +1712,21 @@ app.get('/api/roles', requireAuth, requirePermission('users', 'read'), (req, res
 // GUESTS
 app.get('/api/guests', requireAuth, async (req, res) => {
   try {
-    // Query mejorada: incluye cama actual y booking activo
+    // Query mejorada: incluye cama actual, habitación y booking activo
+    // Tarea 9.1: Agregado room_name para que DEV3 pueda mostrar "Hab. X - Cama Y"
     const guests = await dbAll(`
       SELECT
         g.*,
         b.id as current_bed_id,
         b.name as current_bed_name,
         b.room as current_room,
+        b.room as room_name,
+        bk.id as booking_id,
         bk.check_in,
         bk.check_out,
-        bk.total as booking_total
+        bk.nights,
+        bk.total as booking_total,
+        bk.status as booking_status
       FROM guests g
       LEFT JOIN beds b ON b.guest_id = g.id AND b.status = 'occupied'
       LEFT JOIN bookings bk ON bk.guest_id = g.id AND bk.bed_id = b.id AND bk.status = 'active'
@@ -1739,12 +1771,18 @@ app.get('/api/guests/search', requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Search query is required' });
     }
 
+    // Tarea 9.1: Agregado room_name y campos adicionales
     const guests = await dbAll(`
       SELECT g.*,
              b.name as current_bed_name,
              b.id as current_bed_id,
+             b.room as current_room,
+             b.room as room_name,
+             bk.id as booking_id,
              bk.check_in,
-             bk.check_out
+             bk.check_out,
+             bk.nights,
+             bk.status as booking_status
       FROM guests g
       LEFT JOIN beds b ON g.id = b.guest_id AND b.status = 'occupied'
       LEFT JOIN bookings bk ON g.id = bk.guest_id AND bk.status = 'active'
@@ -1804,14 +1842,19 @@ app.get('/api/guests/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Tarea 9.1: Agregado room_name y campos adicionales
     const guest = await dbGet(`
       SELECT g.*,
              b.name as current_bed_name,
              b.id as current_bed_id,
+             b.room as current_room,
+             b.room as room_name,
+             bk.id as booking_id,
              bk.check_in,
              bk.check_out,
              bk.nights,
-             bk.total as booking_total
+             bk.total as booking_total,
+             bk.status as booking_status
       FROM guests g
       LEFT JOIN beds b ON g.id = b.guest_id AND b.status = 'occupied'
       LEFT JOIN bookings bk ON g.id = bk.guest_id AND bk.status = 'active'
@@ -2591,12 +2634,12 @@ app.get('/api/dashboard/kpi', requireAuth, async (req, res) => {
   }
 });
 
-// CHECK-IN
+// CHECK-IN (with atomic transaction)
 app.post('/api/checkin', requireAuth, async (req, res) => {
   try {
     const { guest_id, bed_id, check_in, check_out, total } = req.body;
 
-    // Check bed availability
+    // Check bed availability BEFORE transaction
     const bed = await dbGet('SELECT * FROM beds WHERE id = ? AND status = ?', [bed_id, 'clean']);
     if (!bed) {
       return res.status(400).json({ error: 'Bed is not available' });
@@ -2607,34 +2650,49 @@ app.post('/api/checkin', requireAuth, async (req, res) => {
     const checkOutDate = new Date(check_out);
     const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
-    // Create booking
-    const booking = await dbRun(
-      'INSERT INTO bookings (guest_id, bed_id, check_in, check_out, nights, total) VALUES (?, ?, ?, ?, ?, ?)',
-      [guest_id, bed_id, check_in, check_out, nights, total]
-    );
+    // Execute all operations atomically - if any fails, all are rolled back
+    const result = await dbTransaction(async ({ txGet, txRun }) => {
+      // Double-check bed availability within transaction (prevents race conditions)
+      const bedCheck = await txGet('SELECT * FROM beds WHERE id = ? AND status = ?', [bed_id, 'clean']);
+      if (!bedCheck) {
+        throw new Error('BED_UNAVAILABLE');
+      }
 
-    // Update bed status
-    await dbRun('UPDATE beds SET status = ?, guest_id = ? WHERE id = ?', ['occupied', guest_id, bed_id]);
+      // Create booking
+      const booking = await txRun(
+        'INSERT INTO bookings (guest_id, bed_id, check_in, check_out, nights, total) VALUES (?, ?, ?, ?, ?, ?) RETURNING id',
+        [guest_id, bed_id, check_in, check_out, nights, total]
+      );
 
-    // Create charge
-    await dbRun(
-      'INSERT INTO transactions (booking_id, type, description, amount) VALUES (?, ?, ?, ?)',
-      [booking.id, 'charge', `Room charge - ${nights} nights`, total]
-    );
+      // Update bed status
+      await txRun('UPDATE beds SET status = ?, guest_id = ? WHERE id = ?', ['occupied', guest_id, bed_id]);
 
-    res.json({ success: true, booking_id: booking.id });
+      // Create charge
+      await txRun(
+        'INSERT INTO transactions (booking_id, type, description, amount) VALUES (?, ?, ?, ?)',
+        [booking.id, 'charge', `Room charge - ${nights} nights`, total]
+      );
+
+      return { booking_id: booking.id };
+    });
+
+    res.json({ success: true, booking_id: result.booking_id });
   } catch (err) {
+    if (err.message === 'BED_UNAVAILABLE') {
+      return res.status(400).json({ error: 'La cama ya no está disponible. Por favor seleccione otra.' });
+    }
+    logger.error('Check-in error', { error: err.message });
     res.status(500).json({ error: err.message });
   }
 });
 
-// CHECK-OUT
+// CHECK-OUT (with atomic transaction)
 app.post('/api/checkout/:bed_id', requireAuth, async (req, res) => {
   try {
     const { bed_id } = req.params;
     const { payment_amount, payment_method } = req.body;
 
-    // Get active booking
+    // Get active booking BEFORE transaction
     const booking = await dbGet(
       'SELECT * FROM bookings WHERE bed_id = ? AND status = ?',
       [bed_id, 'active']
@@ -2644,22 +2702,26 @@ app.post('/api/checkout/:bed_id', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'No active booking found' });
     }
 
-    // Add payment if provided
-    if (payment_amount && payment_amount > 0) {
-      await dbRun(
-        'INSERT INTO transactions (booking_id, type, description, amount, method) VALUES (?, ?, ?, ?, ?)',
-        [booking.id, 'payment', 'Check-out payment', payment_amount, payment_method || 'cash']
-      );
-    }
+    // Execute all operations atomically - if any fails, all are rolled back
+    await dbTransaction(async ({ txRun }) => {
+      // Add payment if provided
+      if (payment_amount && payment_amount > 0) {
+        await txRun(
+          'INSERT INTO transactions (booking_id, type, description, amount, method) VALUES (?, ?, ?, ?, ?)',
+          [booking.id, 'payment', 'Check-out payment', payment_amount, payment_method || 'cash']
+        );
+      }
 
-    // Complete booking
-    await dbRun('UPDATE bookings SET status = ? WHERE id = ?', ['completed', booking.id]);
+      // Complete booking
+      await txRun('UPDATE bookings SET status = ? WHERE id = ?', ['completed', booking.id]);
 
-    // Update bed status
-    await dbRun('UPDATE beds SET status = ?, guest_id = NULL WHERE id = ?', ['dirty', bed_id]);
+      // Update bed status
+      await txRun('UPDATE beds SET status = ?, guest_id = NULL WHERE id = ?', ['dirty', bed_id]);
+    });
 
     res.json({ success: true });
   } catch (err) {
+    logger.error('Check-out error', { error: err.message, bed_id });
     res.status(500).json({ error: err.message });
   }
 });
@@ -3701,7 +3763,7 @@ app.post('/api/bookings/:id/do-checkin', requireAuth, async (req, res) => {
     const { id } = req.params;
     const { payment_amount, payment_method } = req.body;
 
-    // 1. Obtener booking con validaciones
+    // 1. Obtener booking con validaciones (BEFORE transaction)
     const booking = await dbGet(`
       SELECT
         b.*,
@@ -3739,32 +3801,41 @@ app.post('/api/bookings/:id/do-checkin', requireAuth, async (req, res) => {
       });
     }
 
-    // 3. Actualizar booking a checked_in/active
-    await dbRun(`
-      UPDATE bookings
-      SET status = 'active',
-          checked_in_at = datetime('now'),
-          updated_at = datetime('now')
-      WHERE id = ?
-    `, [id]);
+    // Execute all operations atomically - if any fails, all are rolled back
+    await dbTransaction(async ({ txGet, txRun }) => {
+      // Double-check bed status within transaction (prevents race conditions)
+      const bedCheck = await txGet('SELECT status FROM beds WHERE id = ?', [booking.bed_id]);
+      if (!bedCheck || !['clean', 'reserved'].includes(bedCheck.status)) {
+        throw new Error('BED_NOT_AVAILABLE');
+      }
 
-    // 4. Actualizar cama a occupied
-    await dbRun(`
-      UPDATE beds
-      SET status = 'occupied',
-          guest_id = ?
-      WHERE id = ?
-    `, [booking.guest_id, booking.bed_id]);
+      // 3. Actualizar booking a checked_in/active
+      await txRun(`
+        UPDATE bookings
+        SET status = 'active',
+            checked_in_at = datetime('now'),
+            updated_at = datetime('now')
+        WHERE id = ?
+      `, [id]);
 
-    // 5. Registrar pago si se proporciona
-    if (payment_amount && payment_amount > 0) {
-      await dbRun(`
-        INSERT INTO transactions (booking_id, type, description, amount, method, created_at)
-        VALUES (?, 'payment', 'Pago al check-in', ?, ?, datetime('now'))
-      `, [id, payment_amount, payment_method || 'cash']);
-    }
+      // 4. Actualizar cama a occupied
+      await txRun(`
+        UPDATE beds
+        SET status = 'occupied',
+            guest_id = ?
+        WHERE id = ?
+      `, [booking.guest_id, booking.bed_id]);
 
-    // 6. Log de actividad
+      // 5. Registrar pago si se proporciona
+      if (payment_amount && payment_amount > 0) {
+        await txRun(`
+          INSERT INTO transactions (booking_id, type, description, amount, method, created_at)
+          VALUES (?, 'payment', 'Pago al check-in', ?, ?, datetime('now'))
+        `, [id, payment_amount, payment_method || 'cash']);
+      }
+    });
+
+    // 6. Log de actividad (outside transaction - not critical)
     await logActivity(
       'checkin',
       'bookings',
@@ -3800,6 +3871,12 @@ app.post('/api/bookings/:id/do-checkin', requireAuth, async (req, res) => {
     });
 
   } catch (err) {
+    if (err.message === 'BED_NOT_AVAILABLE') {
+      return res.status(400).json({
+        success: false,
+        error: 'La cama ya no está disponible. Por favor verifique su estado.'
+      });
+    }
     logger.error('Error in check-in:', err);
     res.status(500).json({
       success: false,
@@ -3810,14 +3887,14 @@ app.post('/api/bookings/:id/do-checkin', requireAuth, async (req, res) => {
 
 /**
  * POST /api/bookings/:id/do-checkout
- * Check-out UNIFICADO
+ * Check-out UNIFICADO (with atomic transaction)
  */
 app.post('/api/bookings/:id/do-checkout', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const { payment_amount, payment_method } = req.body;
 
-    // 1. Obtener booking
+    // 1. Obtener booking (BEFORE transaction)
     const booking = await dbGet(`
       SELECT
         b.*,
@@ -3848,32 +3925,35 @@ app.post('/api/bookings/:id/do-checkout', requireAuth, async (req, res) => {
       });
     }
 
-    // 2. Registrar pago final si se proporciona
-    if (payment_amount && payment_amount > 0) {
-      await dbRun(`
-        INSERT INTO transactions (booking_id, type, description, amount, method, created_at)
-        VALUES (?, 'payment', 'Pago al check-out', ?, ?, datetime('now'))
-      `, [id, payment_amount, payment_method || 'cash']);
-    }
+    // Execute all operations atomically - if any fails, all are rolled back
+    await dbTransaction(async ({ txRun }) => {
+      // 2. Registrar pago final si se proporciona
+      if (payment_amount && payment_amount > 0) {
+        await txRun(`
+          INSERT INTO transactions (booking_id, type, description, amount, method, created_at)
+          VALUES (?, 'payment', 'Pago al check-out', ?, ?, datetime('now'))
+        `, [id, payment_amount, payment_method || 'cash']);
+      }
 
-    // 3. Completar booking
-    await dbRun(`
-      UPDATE bookings
-      SET status = 'completed',
-          checked_out_at = datetime('now'),
-          updated_at = datetime('now')
-      WHERE id = ?
-    `, [id]);
+      // 3. Completar booking
+      await txRun(`
+        UPDATE bookings
+        SET status = 'completed',
+            checked_out_at = datetime('now'),
+            updated_at = datetime('now')
+        WHERE id = ?
+      `, [id]);
 
-    // 4. Marcar cama como dirty
-    await dbRun(`
-      UPDATE beds
-      SET status = 'dirty',
-          guest_id = NULL
-      WHERE id = ?
-    `, [booking.bed_id]);
+      // 4. Marcar cama como dirty
+      await txRun(`
+        UPDATE beds
+        SET status = 'dirty',
+            guest_id = NULL
+        WHERE id = ?
+      `, [booking.bed_id]);
+    });
 
-    // 5. Log de actividad
+    // 5. Log de actividad (outside transaction - not critical)
     await logActivity(
       'checkout',
       'bookings',

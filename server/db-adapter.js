@@ -137,6 +137,105 @@ class DatabaseAdapter {
     }
   }
 
+  /**
+   * Execute multiple operations within a transaction
+   * Ensures atomicity - all operations succeed or all are rolled back
+   * @param {Function} callback - Async function receiving transaction helpers (txQuery, txGet, txRun)
+   * @returns {Promise<any>} Result of the callback
+   */
+  async transaction(callback) {
+    await this.ensureConnection();
+
+    if (this.isProduction) {
+      // PostgreSQL transaction
+      const client = await this.pool.connect();
+      try {
+        await client.query('BEGIN');
+
+        // Transaction-scoped query functions
+        const txQuery = async (sql, params = []) => {
+          const result = await client.query(sql, params);
+          return result.rows;
+        };
+
+        const txGet = async (sql, params = []) => {
+          const result = await client.query(sql, params);
+          return result.rows[0] || null;
+        };
+
+        const txRun = async (sql, params = []) => {
+          const result = await client.query(sql, params);
+          return {
+            id: result.rows[0]?.id || null,
+            changes: result.rowCount
+          };
+        };
+
+        const result = await callback({ txQuery, txGet, txRun });
+        await client.query('COMMIT');
+        return result;
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    } else {
+      // SQLite transaction
+      return new Promise((resolve, reject) => {
+        this.db.serialize(() => {
+          this.db.run('BEGIN TRANSACTION', async (beginErr) => {
+            if (beginErr) {
+              return reject(beginErr);
+            }
+
+            try {
+              // Transaction-scoped query functions for SQLite
+              const txQuery = (sql, params = []) => {
+                return new Promise((res, rej) => {
+                  this.db.all(sql, params, (err, rows) => {
+                    if (err) rej(err);
+                    else res(rows);
+                  });
+                });
+              };
+
+              const txGet = (sql, params = []) => {
+                return new Promise((res, rej) => {
+                  this.db.get(sql, params, (err, row) => {
+                    if (err) rej(err);
+                    else res(row || null);
+                  });
+                });
+              };
+
+              const txRun = (sql, params = []) => {
+                return new Promise((res, rej) => {
+                  this.db.run(sql, params, function(err) {
+                    if (err) rej(err);
+                    else res({ id: this.lastID, changes: this.changes });
+                  });
+                });
+              };
+
+              const result = await callback({ txQuery, txGet, txRun });
+
+              this.db.run('COMMIT', (commitErr) => {
+                if (commitErr) {
+                  this.db.run('ROLLBACK', () => reject(commitErr));
+                } else {
+                  resolve(result);
+                }
+              });
+            } catch (error) {
+              this.db.run('ROLLBACK', () => reject(error));
+            }
+          });
+        });
+      });
+    }
+  }
+
   // Convertir SQL de SQLite a PostgreSQL
   convertSQL(sql) {
     if (!this.isProduction) return sql;
