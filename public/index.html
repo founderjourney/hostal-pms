@@ -9,6 +9,8 @@
     <script src="js/reservations.js"></script>
     <script src="js/analytics.js"></script>
     <script src="js/feedback.js"></script> <!-- Day 8: Feedback Module -->
+    <script src="js/validation.js"></script> <!-- DEV2: Validacion de campos -->
+    <script src="js/error-messages.js"></script> <!-- DEV2: Mensajes de error -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Mobile Fixes CSS - DEV2-09 -->
     <link href="/css/mobile-fixes.css" rel="stylesheet">
@@ -2088,20 +2090,20 @@
 
                             <div class="fd-form-group">
                                 <label>Documento de identidad * <small style="font-weight: normal; color: #7f8c8d;">(busca automáticamente)</small></label>
-                                <input type="text" id="qc-guest-document" class="fd-input" required placeholder="1052384756" autocomplete="off">
+                                <input type="text" id="qc-guest-document" class="fd-input" required data-validation="document" placeholder="1052384756" autocomplete="off">
                             </div>
                             <div class="fd-form-group">
                                 <label>Nombre completo *</label>
-                                <input type="text" id="qc-guest-name" class="fd-input" required placeholder="Juan García" autocomplete="off">
+                                <input type="text" id="qc-guest-name" class="fd-input" required data-validation="name" placeholder="Juan García" autocomplete="off">
                             </div>
                             <div class="fd-row">
                                 <div class="fd-form-group">
                                     <label>Teléfono</label>
-                                    <input type="tel" id="qc-guest-phone" class="fd-input" placeholder="+57 300 123 4567">
+                                    <input type="tel" id="qc-guest-phone" class="fd-input" data-validation="phone" placeholder="+57 300 123 4567">
                                 </div>
                                 <div class="fd-form-group">
                                     <label>Nacionalidad</label>
-                                    <input type="text" id="qc-guest-nationality" class="fd-input" value="Colombia">
+                                    <input type="text" id="qc-guest-nationality" class="fd-input" data-validation="name" value="Colombia">
                                 </div>
                             </div>
 
@@ -3157,16 +3159,16 @@
                 <form id="guest-form" style="display: grid; gap: 15px;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div>
-                            <label style="color: #2c3e50; display: block; margin-bottom: 5px;">Nombre Completo:</label>
+                            <label style="color: #2c3e50; display: block; margin-bottom: 5px;">Nombre Completo: *</label>
                             <input type="text" id="guest-name" placeholder="Ej: Juan Carlos Pérez"
-                                style="width: 100%; padding: 10px; border: none; border-radius: 5px;" required>
+                                style="width: 100%; padding: 10px; border: none; border-radius: 5px;" required data-validation="name">
                         </div>
 
                         <div>
                             <label style="color: #2c3e50; display: block; margin-bottom: 5px;">Documento de
-                                Identidad:</label>
+                                Identidad: *</label>
                             <input type="text" id="guest-document" placeholder="Ej: 1012345678"
-                                style="width: 100%; padding: 10px; border: none; border-radius: 5px;" required>
+                                style="width: 100%; padding: 10px; border: none; border-radius: 5px;" required data-validation="document">
                         </div>
                     </div>
 
@@ -3174,13 +3176,13 @@
                         <div>
                             <label style="color: #2c3e50; display: block; margin-bottom: 5px;">Email:</label>
                             <input type="email" id="guest-email" placeholder="nombre@email.com"
-                                style="width: 100%; padding: 10px; border: none; border-radius: 5px;">
+                                style="width: 100%; padding: 10px; border: none; border-radius: 5px;" data-validation="email">
                         </div>
 
                         <div>
                             <label style="color: #2c3e50; display: block; margin-bottom: 5px;">Teléfono:</label>
                             <input type="tel" id="guest-phone" placeholder="+57 310 234 5678"
-                                style="width: 100%; padding: 10px; border: none; border-radius: 5px;">
+                                style="width: 100%; padding: 10px; border: none; border-radius: 5px;" data-validation="phone">
                         </div>
                     </div>
 
@@ -4762,6 +4764,20 @@
             // Guest form handling
             document.getElementById('guest-form').addEventListener('submit', async function (e) {
                 e.preventDefault();
+
+                // VALIDACION DEV2: Validar formulario antes de enviar
+                if (typeof validateFormBeforeSubmit === 'function') {
+                    const validation = validateFormBeforeSubmit('guest-form');
+                    if (!validation.valid) {
+                        const firstError = validation.errors[0];
+                        if (firstError && typeof showErrorAlert === 'function') {
+                            showErrorAlert(firstError.message, firstError.field);
+                        } else {
+                            alert('❌ Por favor corrige los errores en el formulario');
+                        }
+                        return;
+                    }
+                }
 
                 const formData = {
                     name: document.getElementById('guest-name').value,
@@ -7230,6 +7246,21 @@
             document.getElementById('quick-checkin-form')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
+                // VALIDACION DEV2: Validar formulario antes de enviar
+                if (typeof validateFormBeforeSubmit === 'function') {
+                    const validation = validateFormBeforeSubmit('quick-checkin-form');
+                    if (!validation.valid) {
+                        // Mostrar primer error
+                        const firstError = validation.errors[0];
+                        if (firstError && typeof showErrorAlert === 'function') {
+                            showErrorAlert(firstError.message, firstError.field);
+                        } else {
+                            alert('❌ Por favor corrige los errores en el formulario');
+                        }
+                        return;
+                    }
+                }
+
                 // Validación: huésped en blacklist
                 if (currentGuestLookup && currentGuestLookup.is_blacklisted) {
                     if (!confirm('⚠️ ATENCIÓN: Este huésped está en la LISTA NEGRA.\n\n¿Desea continuar de todas formas?')) {
@@ -7265,7 +7296,7 @@
                         payment_amount: paymentMethod !== 'pending' ? (price * nights) : 0
                     };
 
-                    // Validaciones básicas
+                    // Validaciones básicas (backup si validateFormBeforeSubmit no está disponible)
                     if (!data.guest_name || !data.guest_document) {
                         alert('❌ Nombre y documento son requeridos');
                         return;
