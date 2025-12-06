@@ -7197,21 +7197,50 @@
                 }
             });
 
+            let isLoadingBeds = false; // Guard to prevent infinite recursion
+
             async function loadAvailableBedsForCheckin() {
                 const select = document.getElementById('qc-bed-select');
+
+                // Prevent infinite recursion
+                if (isLoadingBeds) {
+                    console.warn('loadAvailableBedsForCheckin already in progress, skipping');
+                    return;
+                }
+
                 select.innerHTML = '<option value="">Cargando...</option>';
 
                 try {
-                    if (frontDeskData && frontDeskData.available_beds) {
+                    if (frontDeskData && frontDeskData.available_beds && frontDeskData.available_beds.length >= 0) {
                         select.innerHTML = '<option value="">Seleccionar cama...</option>' +
                             frontDeskData.available_beds.map(bed =>
                                 `<option value="${bed.id}" data-price="${bed.price}">${bed.name} (${bed.room}) - $${bed.price.toLocaleString()}/noche</option>`
                             ).join('');
+
+                        if (frontDeskData.available_beds.length === 0) {
+                            select.innerHTML = '<option value="">No hay camas disponibles</option>';
+                        }
                     } else {
-                        await refreshFrontDeskStatus();
-                        loadAvailableBedsForCheckin();
+                        isLoadingBeds = true;
+                        try {
+                            await refreshFrontDeskStatus();
+                            isLoadingBeds = false;
+
+                            // Only retry if we got data
+                            if (frontDeskData && frontDeskData.available_beds) {
+                                loadAvailableBedsForCheckin();
+                            } else {
+                                select.innerHTML = '<option value="">Error: no se pudo cargar datos</option>';
+                            }
+                        } catch (err) {
+                            isLoadingBeds = false;
+                            console.error('Error refreshing front desk status:', err);
+                            select.innerHTML = '<option value="">Error cargando camas</option>';
+                        }
                     }
                 } catch (error) {
+                    isLoadingBeds = false;
+                    console.error('Error in loadAvailableBedsForCheckin:', error);
                     select.innerHTML = '<option value="">Error cargando camas</option>';
                 }
             }
