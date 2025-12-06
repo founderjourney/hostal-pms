@@ -281,18 +281,18 @@
 ## ORDEN DE EJECUCION RECOMENDADO
 
 ### FASE 1 - Estabilidad (Critico)
-- [ ] Tarea 1: Error guarda registro aunque muestre error
+- [x] Tarea 1: Error guarda registro aunque muestre error (DEV1 - Transacciones atomicas)
 - [ ] Tarea 3: Error en calculo de fechas
-- [ ] Tarea 4: Mensajes de error en lenguaje humano
+- [x] Tarea 4: Mensajes de error en lenguaje humano (DEV2 - error-messages.js)
 
 ### FASE 2 - Validacion (Critico)
-- [ ] Tarea 2: Validacion de caracteres especiales
+- [x] Tarea 2: Validacion de caracteres especiales (DEV2 - validation.js)
 - [ ] Tarea 5: Campos obligatorios + tecla borrar
 
 ### FASE 3 - UX Inmediato (Alta)
 - [ ] Tarea 7: Eliminar pop-ups de confirmacion
 - [x] Tarea 8: Boton X mas visible (DEV4 - COMPLETADO)
-- [ ] Tarea 9: Mostrar habitacion en huespedes
+- [x] Tarea 9: Mostrar habitacion en huespedes (DEV1 - Query SQL actualizada)
 - [ ] Tarea 6: Enlaces con filtros
 
 ### FASE 4 - Polish (Media)
@@ -303,6 +303,10 @@
 ### FASE 5 - Seguridad (Feature)
 - [ ] Tarea 13: 2FA
 - [x] Tarea 14: Patron consistente (DEV4 - COMPLETADO)
+
+### BUGS CORREGIDOS (2025-12-06)
+- [x] Loop infinito en selector de camas: Corregido con bandera de proteccion
+- [x] Integracion de validacion frontend: Scripts agregados a index.html
 
 ---
 

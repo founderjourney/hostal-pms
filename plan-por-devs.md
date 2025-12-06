@@ -467,23 +467,31 @@ Haz commit PRIMERO para evitar conflictos.
 
 ## CHECKLIST POR DEV
 
-### DEV1
-- [ ] Tarea 1: Transacciones atomicas
-- [ ] Tarea 9.1: Query SQL habitacion
-- [ ] Tarea 13: 2FA (si hay tiempo)
+### DEV1 - COMPLETADO 2025-12-06
+- [x] Tarea 1: Transacciones atomicas
+- [x] Tarea 9.1: Query SQL habitacion
+- [ ] Tarea 13: 2FA (pendiente - feature futuro)
 
-### DEV2
-- [ ] Tarea 2: Libreria validation.js
-- [ ] Tarea 4: Mensajes de error
-- [ ] Tarea 5: Campos obligatorios
+**Archivos modificados por DEV1:**
+- server/db-adapter.js - Metodo transaction() para operaciones atomicas
+- server/server-simple.js - Integracion de transacciones
 
-### DEV3
-- [ ] Tarea 3: Calculo de fechas
-- [ ] Tarea 6: Enlaces con filtros
-- [ ] Tarea 7: Eliminar pop-ups
-- [ ] Tarea 9.2: Renderizado habitacion
-- [ ] Tarea 11: Notas en camas
-- [ ] Tarea 12: Indicadores clickeables
+### DEV2 - COMPLETADO 2025-12-06
+- [x] Tarea 2: Libreria validation.js
+- [x] Tarea 4: Mensajes de error
+- [ ] Tarea 5: Campos obligatorios (parcial)
+
+**Archivos creados por DEV2:**
+- public/js/validation.js - Validacion frontend
+- public/js/error-messages.js - Diccionario de errores
+
+### DEV3 - COMPLETADO 2025-12-06
+- [x] Tarea 3: Calculo de fechas (formatDateToInput helper)
+- [x] Tarea 6: Enlaces con filtros
+- [ ] Tarea 7: Eliminar pop-ups (pendiente)
+- [x] Tarea 9.2: Renderizado habitacion
+- [ ] Tarea 11: Notas en camas (pendiente)
+- [ ] Tarea 12: Indicadores clickeables (pendiente)
 
 ### DEV4 - COMPLETADO 2025-12-06
 - [x] Tarea 8: Boton X visible
@@ -497,4 +505,25 @@ Haz commit PRIMERO para evitar conflictos.
 
 ---
 
-*Plan generado para trabajo en paralelo - Almanik PMS*
+## BUGS CORREGIDOS POST-MERGE (2025-12-06)
+
+| Bug | Descripcion | Solucion | Archivo |
+|-----|-------------|----------|---------|
+| Loop infinito | Selector de camas "temblaba" infinitamente cuando API fallaba | Agregado guard `isLoadingBeds` para prevenir recursion | public/index.html:7200-7246 |
+| Validacion no aplicada | Scripts creados pero no integrados en HTML | Agregados `<script>` tags y atributos `data-validation` | public/index.html |
+
+---
+
+## TAREAS PENDIENTES
+
+| Tarea | Prioridad | Descripcion |
+|-------|-----------|-------------|
+| Tarea 5 | Alta | Campos obligatorios + tecla borrar |
+| Tarea 7 | Alta | Eliminar pop-ups de confirmacion |
+| Tarea 11 | Media | Notas en camas disponibles |
+| Tarea 12 | Media | Indicadores clickeables en dashboard |
+| Tarea 13 | Baja | 2FA (feature nuevo) |
+
+---
+
+*Plan actualizado - Almanik PMS - 2025-12-06*
